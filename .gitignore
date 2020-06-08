@@ -1,0 +1,4 @@
+*.exe
+test
+config.json
+k8s_*
