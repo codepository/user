@@ -10,6 +10,11 @@ import (
 	"github.com/codepository/user/service"
 )
 
+const (
+	// SysManagerAuthority SysManagerAuthority
+	SysManagerAuthority = "系统管理员"
+)
+
 // RouteFunction 根据路径指向方法
 type RouteFunction func(*model.Container) error
 
@@ -26,7 +31,7 @@ type RouteHandler struct {
 // RouteMeta 路由参数
 type RouteMeta struct {
 	// 可以访问该路径的所有角色的id
-	authority []int
+	authority []string
 }
 
 var routers []*RouteHandler
@@ -37,11 +42,11 @@ func SetRouters() {
 		{route: "visit/user/userinfoByToken", handler: conmgr.GetUserinfo},
 		{route: "visit/user/getUserByID", handler: conmgr.GetUserByID},
 		// 用户添加角色
-		{route: "exec/user/addlabel", handler: conmgr.AddUserLabel, meta: &RouteMeta{authority: []int{7}}},
+		{route: "exec/user/addlabel", handler: conmgr.AddUserLabel, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 		// 批量添加用户标签
-		{route: "exec/user/addlabelbyDepartment", handler: service.AddlabelbyDepartment, meta: &RouteMeta{authority: []int{7}}},
+		{route: "exec/user/addlabelbyDepartment", handler: service.AddlabelbyDepartment, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 		// 删除用户标签
-		{route: "exec/user/dellabel", handler: conmgr.DelLabel, meta: &RouteMeta{authority: []int{7}}},
+		{route: "exec/user/dellabel", handler: conmgr.DelLabel, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 		{route: "visit/user/findbylabelids", handler: service.FindUsersByLabelIDs},
 		{route: "visit/user/getUsers", handler: service.GetUsers},
 		{route: "exec/user/forgetPass", handler: conmgr.ForgetPass},
@@ -50,7 +55,7 @@ func SetRouters() {
 		// 查询所有标签
 		{route: "visit/lable/all", handler: conmgr.FindAllLabel},
 		// 添加新的标签
-		{route: "exec/label/add", handler: conmgr.AddNewLabel, meta: &RouteMeta{authority: []int{7}}},
+		{route: "exec/label/add", handler: conmgr.AddNewLabel, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 	}
 }
 
@@ -88,16 +93,16 @@ func checkAuthority(f *RouteHandler, token string) error {
 	// 权限匹配
 	for _, a := range f.meta.authority {
 		for _, l := range labels {
-			if l.LabelID == a {
+			if l == a {
 				return nil
 			}
 		}
 	}
-	labs, err := conmgr.GetLabelNamesByIds(f.meta.authority)
-	if err != nil {
-		return err
-	}
+	// labs, err := conmgr.GetLabelNamesByIds(f.meta.authority)
+	// if err != nil {
+	// 	return err
+	// }
 
-	return fmt.Errorf("需要权限:%v", strings.Join(labs, ","))
+	return fmt.Errorf("需要权限:%v", strings.Join(f.meta.authority, ","))
 
 }

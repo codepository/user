@@ -47,7 +47,7 @@ func (cm *ConnManager) Start() {
 	// 定时任务
 	go cronTaskStart(cm)
 	// 获取用户信息缓存
-	refreshUserMap()
+	// refreshUserMap()
 
 }
 
@@ -126,7 +126,7 @@ func refreshUserMap() {
 // CaceheUserInfo 缓存用户信息
 func CaceheUserInfo(user *model.Userinfo) error {
 	// 再查询每个用户对应的token
-	login := &model.Login{}
+	login := &model.FznewsLogin{}
 	login.UserID = user.ID
 	login.Find()
 
@@ -191,7 +191,7 @@ func GetUserByID(c *model.Container) error {
 		return err
 	}
 	// 再查询每个用户对应的token
-	login := &model.Login{}
+	login := &model.FznewsLogin{}
 	login.UserID = int(id)
 	login.Find()
 	token := login.Password
@@ -233,7 +233,7 @@ func CheckIfHaveNewUser() {
 func DelLabel(c *model.Container) error {
 	// 参数判断
 	if c.Body.Data == nil {
-		return errors.New("参数类型必须是:{'body':{'data':[{'user_id':1,'label_id:1},{'user_id':2,'label_id:1}]}}")
+		return errors.New("参数类型必须是:{'body':{'data':[{'uId':1,'tagId:1},{'uId':2,'tagId:1}]}}")
 	}
 	if len(c.Body.Data) == 0 {
 		return errors.New("data不能为空")
@@ -249,10 +249,10 @@ func DelLabel(c *model.Container) error {
 	for i, v := range data {
 		ul, ok := v.(map[string]interface{})
 		if !ok {
-			strbuffer.WriteString(fmt.Sprintf("第[%d]条删除失败,err:%s,", (i + 1), "参数类型必须是:{'body':{'data':[{'user_id':1,'label_id:1}]}}"))
+			strbuffer.WriteString(fmt.Sprintf("第[%d]条删除失败,err:%s,", (i + 1), "参数类型必须是:{'body':{'data':[{'uId':1,'tagId:1}]}}"))
 			continue
 		}
-		userlabel := &model.UserLabel{}
+		userlabel := &model.WeixinOauserTaguser{}
 		err := userlabel.FromMap(ul)
 		if err != nil {
 			strbuffer.WriteString(fmt.Sprintf("第[%d]条删除失败,err:%s,", (i + 1), err.Error()))
@@ -270,7 +270,9 @@ func DelLabel(c *model.Container) error {
 	if len(strbuffer.String()) != 0 {
 		return errors.New(strbuffer.String())
 	}
+	c.Header.Token = ""
 	c.Header.Msg = "删除成功"
+	c.Body.Data = nil
 	// 更新相关用户的用户信息缓存
 	err := cacheUserinfoByIDs(userids)
 	return err
@@ -297,7 +299,7 @@ func AddUserLabel(c *model.Container) error {
 			strbuffer.WriteString(fmt.Sprintf("第[%d]条添加失败,err:%s,", (i + 1), "参数类型:{'body':{'data':[{'user_id':1,'label_id:0,'label_name':'一线考核'}]}}"))
 			continue
 		}
-		userlabel := &model.UserLabel{}
+		userlabel := &model.WeixinOauserTaguser{}
 		err := userlabel.FromMap(ul)
 		if err != nil {
 			strbuffer.WriteString(fmt.Sprintf("第[%d]条添加失败,err:%s,", (i + 1), err.Error()))
@@ -355,7 +357,7 @@ func clearUserMap() {
 
 // sendRecord 发送纪录
 func sendRecord(typename, data string, flag uint8, err error) {
-	record := model.Record{
+	record := model.FznewsRecord{
 		Data: data,
 		Type: typename,
 		Flag: flag,

@@ -62,13 +62,12 @@ func setupDB() {
 		panic(err)
 	}
 	db.DB().SetMaxOpenConns(open)
-	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return "fznews_" + defaultTableName
-	}
+	// gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+	// 	return "fznews_" + defaultTableName
+	// }
 	db.Set("gorm:table_options", "ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;").
-		AutoMigrate(&Login{}).AutoMigrate(&Record{}).AutoMigrate(&UserLabel{}).AutoMigrate(&Label{})
-	db.Model(&Login{}).AddUniqueIndex("user_id", "user_id")
-	db.Model(&UserLabel{}).AddUniqueIndex("userid_labelid", "user_id", "label_id")
+		AutoMigrate(&FznewsLogin{}).AutoMigrate(&FznewsRecord{})
+	db.Model(&FznewsLogin{}).AddUniqueIndex("user_id", "user_id")
 }
 
 // CloseDB closes database connection (unnecessary)

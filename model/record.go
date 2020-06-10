@@ -1,7 +1,7 @@
 package model
 
-// Record 纪录
-type Record struct {
+// FznewsRecord 纪录
+type FznewsRecord struct {
 	Model
 	Data string `json:"data" gorm:"size:1024"`
 	Type string `json:"type"`
@@ -10,6 +10,6 @@ type Record struct {
 }
 
 // Save 直接保存
-func (r *Record) Save() error {
+func (r *FznewsRecord) Save() error {
 	return db.Create(r).Error
 }

@@ -7,6 +7,7 @@ import (
 
 // AddNewLabel 添加标签
 func AddNewLabel(c *model.Container) error {
+
 	err := service.AddNewLabel(c)
 	if err != nil {
 		return err
@@ -31,8 +32,8 @@ func FindAllLabel(c *model.Container) error {
 }
 
 // GetAllLabel GetAllLabel
-func GetAllLabel() ([]*model.Label, error) {
-	var result []*model.Label
+func GetAllLabel() ([]*model.WeixinOauserTag, error) {
+	var result []*model.WeixinOauserTag
 	var err error
 	data := Conmgr.cacheMap[labelsCache]
 	if data == nil {
@@ -42,7 +43,7 @@ func GetAllLabel() ([]*model.Label, error) {
 		}
 		Conmgr.cacheMap[labelsCache] = result
 	} else {
-		result = data.([]*model.Label)
+		result = data.([]*model.WeixinOauserTag)
 	}
 	return result, nil
 }
@@ -57,7 +58,7 @@ func GetLabelNamesByIds(ids []int) ([]string, error) {
 	for _, id := range ids {
 		for _, label := range labels {
 			if label.ID == id {
-				result = append(result, label.Name)
+				result = append(result, label.TagName)
 				break
 			}
 		}

@@ -4,21 +4,24 @@ import "errors"
 
 type labelStatus int
 
-// Label 标签
-type Label struct {
-	Model
-	Name     string `json:"name"`
+// LabelTable LabelTable
+var LabelTable = "weixin_oauser_tag"
+
+// WeixinOauserTag 标签
+type WeixinOauserTag struct {
+	ID       int    `gorm:"primary_key" json:"id,omitempty"`
+	TagName  string `gorm:"column:tagName" json:"tagName"`
 	Type     string `json:"type"`
 	Describe string `json:"describe,omitempty"`
 }
 
 // FromMap FromMap
-func (l *Label) FromMap(json map[string]interface{}) error {
-	name, yes := json["name"].(string)
+func (l *WeixinOauserTag) FromMap(json map[string]interface{}) error {
+	name, yes := json["tagName"].(string)
 	if !yes {
-		return errors.New("name 须为字符串")
+		return errors.New("tagName 须为字符串")
 	}
-	l.Name = name
+	l.TagName = name
 	type1, yes := json["type"].(string)
 	if !yes {
 		return errors.New("type 须为字符串")
@@ -34,17 +37,17 @@ func (l *Label) FromMap(json map[string]interface{}) error {
 }
 
 // SaveOrUpdate 不存在就保存
-func (l *Label) SaveOrUpdate() error {
+func (l *WeixinOauserTag) SaveOrUpdate() error {
 	//
-	if len(l.Name) == 0 || len(l.Type) == 0 || len(l.Describe) == 0 {
-		return errors.New("name、type、describe都不能为空;name是标签的名称,type是标签的类型,describe是标签的作用")
+	if len(l.TagName) == 0 || len(l.Type) == 0 || len(l.Describe) == 0 {
+		return errors.New("tagName、type、describe都不能为空;tagName是标签的名称,type是标签的类型,describe是标签的作用")
 	}
-	return db.Where(Label{Name: l.Name}).Assign(l).FirstOrCreate(l).Error
+	return wxdb.Where(WeixinOauserTag{TagName: l.TagName}).Assign(l).FirstOrCreate(l).Error
 }
 
 // GetLabels 获取所有标签
-func GetLabels() ([]*Label, error) {
-	var result []*Label
-	err := db.Find(&result).Error
+func GetLabels() ([]*WeixinOauserTag, error) {
+	var result []*WeixinOauserTag
+	err := wxdb.Find(&result).Error
 	return result, err
 }

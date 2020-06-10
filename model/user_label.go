@@ -9,64 +9,64 @@ import (
 )
 
 // UserLabelTable UserLabelTable
-var UserLabelTable = "fznews_user_label"
+var UserLabelTable = "weixin_oauser_taguser"
 
-// UserLabel 用户标签
-type UserLabel struct {
-	Model
-	UserID    int    `json:"user_id,omitemtpy"`
-	LabelID   int    `json:"label_id,omitemtpy"`
-	LabelName string `json:"label_name,omitemtpy"`
+// WeixinOauserTaguser 用户标签
+type WeixinOauserTaguser struct {
+	ID        int    `gorm:"primary_key" json:"id,omitempty"`
+	UserID    int    `gorm:"column:uId" json:"uId,omitemtpy"`
+	TagID     int    `gorm:"column:tagId" json:"tagId,omitemtpy"`
+	LabelName string `json:"label_name,omitempty"`
 }
 
 // FromMap 使用map进行赋值
-func (u *UserLabel) FromMap(fields map[string]interface{}) error {
-	if fields["user_id"] == nil || fields["label_id"] == nil {
-		return errors.New("user_id、label_id、label_name不能为空")
+func (u *WeixinOauserTaguser) FromMap(fields map[string]interface{}) error {
+	if fields["uId"] == nil || fields["tagId"] == nil {
+		return errors.New("uId、tagId不能为空")
 	}
 
-	userid, ok := fields["user_id"].(float64)
+	userid, ok := fields["uId"].(float64)
 	if !ok {
-		return errors.New("user_id 必须为整数")
+		return errors.New("uId 必须为整数")
 	}
-	labelid, ok := fields["label_id"].(float64)
+	labelid, ok := fields["tagId"].(float64)
 	if !ok {
-		return errors.New("label_id 必须为整数")
+		return errors.New("tagId 必须为整数")
 	}
 	u.UserID = int(userid)
-	u.LabelID = int(labelid)
+	u.TagID = int(labelid)
 	return nil
 }
 
 // ToString ToString
-func (u *UserLabel) ToString() string {
+func (u *WeixinOauserTaguser) ToString() string {
 	str, _ := util.ToJSONStr(u)
 	return str
 }
 
 // SaveOrUpdate 保存或更新
-func (u *UserLabel) SaveOrUpdate() error {
+func (u *WeixinOauserTaguser) SaveOrUpdate() error {
 
-	return db.Where(UserLabel{UserID: u.UserID, LabelID: u.LabelID}).Assign(u).FirstOrCreate(u).Error
+	return wxdb.Where(WeixinOauserTaguser{UserID: u.UserID, TagID: u.TagID}).Assign(u).Omit("label_name").FirstOrCreate(u).Error
 }
 
 // DelSingle 删除一个
-func (u *UserLabel) DelSingle() error {
+func (u *WeixinOauserTaguser) DelSingle() error {
 	log.Println("label:", u.ToString())
 	if u.ID == 0 {
-		if u.UserID == 0 || u.LabelID == 0 {
-			return errors.New("label的id不能为空或者user_id和label_id都不为空")
+		if u.UserID == 0 || u.TagID == 0 {
+			return errors.New("label的id不能为空或者uId和tagId都不为空")
 		}
 	}
-	return db.Where(u).Delete(&UserLabel{}).Error
+	return wxdb.Where(u).Delete(&WeixinOauserTaguser{}).Error
 }
 
 // FindUserLabels 查询用户标签
-func FindUserLabels(query interface{}) ([]*UserLabel, error) {
-	var labels []*UserLabel
-	err := db.Table(fmt.Sprintf("%s u", UserLabelTable)).Select("u.user_id,l.id as label_id,l.name as label_name").
-		Joins("join fznews_label l on l.id=u.label_id").
-		Where("user_id in (?)", query).Find(&labels).Error
+func FindUserLabels(query interface{}) ([]*WeixinOauserTaguser, error) {
+	var labels []*WeixinOauserTaguser
+	err := wxdb.Table(fmt.Sprintf("%s u", UserLabelTable)).Select("u.uId as uId,l.id as tagId,l.tagName as label_name").
+		Joins(fmt.Sprintf("join %s l on l.id=u.tagId", LabelTable)).
+		Where("uId in (?)", query).Find(&labels).Error
 	if err != nil {
 		return nil, err
 	}
@@ -79,8 +79,8 @@ func FindUsersByLabelIDs(ids []interface{}, offset, limit int) ([]*Userinfo, err
 	if limit == 0 {
 		limit = 20
 	}
-	err := db.Table(UserLabelTable).Select("u.*").Joins(fmt.Sprintf("join %s u on u.id=%s.user_id", UserinfoTabel, UserLabelTable)).
-		Where("label_id in (?)", ids).Group("u.id").
+	err := wxdb.Table(UserLabelTable).Select("u.*").Joins(fmt.Sprintf("join %s u on u.id=%s.uId", UserinfoTabel, UserLabelTable)).
+		Where("tagId in (?)", ids).Group("u.id").
 		Offset(offset).
 		Limit(limit).
 		Find(&result).Error

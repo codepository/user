@@ -2,6 +2,8 @@ package service
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/codepository/user/model"
 )
@@ -16,13 +18,27 @@ func AddNewLabel(c *model.Container) error {
 	// 检查类型
 
 	// 保存
-	for _, v := range c.Body.Data {
+	var strbuffer strings.Builder
+	for i, v := range c.Body.Data {
 		json := v.(map[string]interface{})
-		l := &model.Label{}
-		l.FromMap(json)
-		err := l.SaveOrUpdate()
-		return err
+		l := &model.WeixinOauserTag{}
+		err := l.FromMap(json)
+		if err != nil {
+			strbuffer.WriteString(fmt.Sprintf("第%d条失败:%s", i+1, err.Error()))
+			continue
+		}
+		err = l.SaveOrUpdate()
+		if err != nil {
+			strbuffer.WriteString(fmt.Sprintf("第%d条失败:%s", i+1, err.Error()))
+			continue
+		}
 	}
 	c.Body.Data = nil
+
+	if strbuffer.Len() != 0 {
+
+		return errors.New(strbuffer.String())
+	}
+	c.Header.Msg = "添加成功"
 	return nil
 }

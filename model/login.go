@@ -12,33 +12,33 @@ import (
 
 var logintable = "fznews_login"
 
-// Login 登陆表
-type Login struct {
+// FznewsLogin 登陆表
+type FznewsLogin struct {
 	Model
 	UserID   int    `json:"user_id"`
 	Password string `json:"password"`
 }
 
 // SaveIfNotExist 不存在就保存，存在就啥也不做
-func (l *Login) SaveIfNotExist() error {
+func (l *FznewsLogin) SaveIfNotExist() error {
 	if l.UserID == 0 {
 		return errors.New("user_id不能为空")
 	}
 	l.Password = encodePass(l.UserID, l.Password)
-	return db.Table(logintable).Where(Login{UserID: l.UserID}).Assign(l).FirstOrCreate(l).Error
+	return db.Table(logintable).Where(FznewsLogin{UserID: l.UserID}).Assign(l).FirstOrCreate(l).Error
 }
 
 // Update 只会更新这些更改的和非空白字段
-func (l *Login) Update() error {
+func (l *FznewsLogin) Update() error {
 	if l.UserID == 0 {
 		return errors.New("user_id不能为空")
 	}
 	l.Password = encodePass(l.UserID, l.Password)
-	return db.Table(logintable).Model(&Login{}).Where("user_id=?", l.UserID).Updates(l).Error
+	return db.Table(logintable).Model(&FznewsLogin{}).Where("user_id=?", l.UserID).Updates(l).Error
 }
 
 // Find Find
-func (l *Login) Find() error {
+func (l *FznewsLogin) Find() error {
 	if l.UserID == 0 {
 		return errors.New("user_id不能为空")
 	}
@@ -46,7 +46,7 @@ func (l *Login) Find() error {
 }
 
 // Check 验证密码并生成token
-func (l *Login) Check() (bool, string, error) {
+func (l *FznewsLogin) Check() (bool, string, error) {
 	l.Password = encodePass(l.UserID, l.Password)
 	var count int
 	err := db.Table(logintable).Where(l).Count(&count).Error
@@ -58,7 +58,7 @@ func (l *Login) Check() (bool, string, error) {
 }
 
 // GetToken 获取token
-func (l *Login) GetToken() (string, error) {
+func (l *FznewsLogin) GetToken() (string, error) {
 	if l.UserID == 0 || len(l.Password) == 0 {
 		return "", errors.New("user_id和password不能为空")
 	}
@@ -68,7 +68,7 @@ func (l *Login) GetToken() (string, error) {
 // FindLastLoginID 查询最新的登陆id
 func FindLastLoginID() (int, error) {
 	var id []int
-	err := db.Table(logintable).Select("user_id").Order("user_id desc").Limit(1).Find(&Login{}).Pluck("id", &id).Error
+	err := db.Table(logintable).Select("user_id").Order("user_id desc").Limit(1).Find(&FznewsLogin{}).Pluck("id", &id).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return 0, err
 	}

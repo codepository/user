@@ -29,12 +29,29 @@ func GetAllUserinfo(user *model.Userinfo) ([]interface{}, error) {
 	var data []interface{}
 	data = append(data, user)
 	// 用户标签查询
-	labels, err := model.FindUserLabels([]int{user.ID})
+	labels, err := FindUserLabelNames([]int{user.ID})
 	if err != nil {
 		return nil, err
 	}
+
 	data = append(data, labels)
 	return data, nil
+}
+
+// FindUserLabelNames 用户所有的标签
+func FindUserLabelNames(query interface{}) ([]string, error) {
+	labels, err := model.FindUserLabels(query)
+	if err != nil {
+		return nil, err
+	}
+	if len(labels) == 0 {
+		return []string{}, nil
+	}
+	var n []string
+	for _, l := range labels {
+		n = append(n, l.LabelName)
+	}
+	return n, nil
 }
 
 // CheckIfHaveNewUser 检查是否有新用户
@@ -61,7 +78,7 @@ func CheckIfHaveNewUser() ([]int, error) {
 
 // SetPassWord 设置密码
 func SetPassWord(userid int, password string) error {
-	login := model.Login{
+	login := model.FznewsLogin{
 		UserID:   userid,
 		Password: password,
 	}
@@ -70,7 +87,7 @@ func SetPassWord(userid int, password string) error {
 
 // UpdatePassword 更新密码
 func UpdatePassword(userid int, password string) error {
-	login := model.Login{
+	login := model.FznewsLogin{
 		UserID:   userid,
 		Password: password,
 	}
@@ -89,16 +106,16 @@ func GetUsers(c *model.Container) error {
 
 // AddLabel 添加标签
 func AddLabel(userID int, labelID int, labelName string) error {
-	label := model.UserLabel{
+	label := model.WeixinOauserTaguser{
 		UserID:    userID,
-		LabelID:   labelID,
+		TagID:     labelID,
 		LabelName: labelName,
 	}
 	return label.SaveOrUpdate()
 }
 
 // FindAllLabel 查询所有标签
-func FindAllLabel() ([]*model.Label, error) {
+func FindAllLabel() ([]*model.WeixinOauserTag, error) {
 	labels, err := model.GetLabels()
 	if err != nil {
 		return nil, err
@@ -137,9 +154,9 @@ func AddlabelbyDepartment(c *model.Container) error {
 	// 插入数据库
 	for _, userid := range userids {
 		for _, labelid := range labels {
-			ul := model.UserLabel{
-				UserID:  userid,
-				LabelID: int(labelid.(float64)),
+			ul := model.WeixinOauserTaguser{
+				UserID: userid,
+				TagID:  int(labelid.(float64)),
 			}
 			ul.SaveOrUpdate()
 		}

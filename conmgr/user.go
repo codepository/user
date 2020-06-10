@@ -35,7 +35,7 @@ func AlterPass(c *model.Container) error {
 		return err
 	}
 	// 更新用户缓存信息
-	l := &model.Login{UserID: user.ID, Password: c.Body.Metrics}
+	l := &model.FznewsLogin{UserID: user.ID, Password: c.Body.Metrics}
 	token, _ := l.GetToken()
 	Conmgr.cacheMap[token] = Conmgr.cacheMap[c.Header.Token]
 	c.Header.Token = token
@@ -54,7 +54,7 @@ func GetUserByToken(token string) (*model.Userinfo, error) {
 }
 
 // GetLabelsByToken 根据token获取用户标签
-func GetLabelsByToken(token string) ([]*model.UserLabel, error) {
+func GetLabelsByToken(token string) ([]string, error) {
 	userinfos := Conmgr.userMap[token]
 	if userinfos == nil {
 		return nil, errors.New("请重新登陆")
@@ -63,7 +63,7 @@ func GetLabelsByToken(token string) ([]*model.UserLabel, error) {
 	if len(data) < 2 {
 		return nil, nil
 	}
-	return data[labelsCacheStatus].([]*model.UserLabel), nil
+	return data[labelsCacheStatus].([]string), nil
 }
 
 // ForgetPass 忘记密码

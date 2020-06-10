@@ -19,6 +19,10 @@ type Userinfo struct {
 	Email          string `json:"email,omitempty"`
 	Avatar         string `json:"avatar,omitempty"`
 	Status         int    `json:"status,omitempty"`
+	//0是一般工作人员， 1中层正职（含主持工作的副职）, 2是中层副职，3是社领导
+	Level int `json:"level,omitempty"`
+	// 1表示是部门领导，0表示非部门领导
+	IsLeader int `json:"is_leader,omitempty"`
 }
 
 // UserinfoTabel 对应weixin_leave_userinfo表
@@ -58,7 +62,7 @@ func UserLogin(account, password string) (*Userinfo, string, error) {
 		return nil, "", errors.New("有多个" + accountType + "为【" + account + "】的账号，无法登陆！")
 	}
 	// 匹配密码
-	login := Login{
+	login := FznewsLogin{
 		UserID:   result[0].ID,
 		Password: password,
 	}
