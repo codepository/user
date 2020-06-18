@@ -56,6 +56,14 @@ func SetRouters() {
 		{route: "visit/lable/all", handler: conmgr.FindAllLabel},
 		// 添加新的标签
 		{route: "exec/label/add", handler: conmgr.AddNewLabel, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
+		// 启动流程
+		{route: "exec/flow/startByToken", handler: conmgr.StartFlowByToken, meta: &RouteMeta{
+			authority: []string{"%考核组成员"},
+		}},
+		// 分管领导管理
+		{route: "exec/leader/add", handler: conmgr.AddLeadership, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
+		{route: "exec/leader/delbyid", handler: conmgr.DelByIDLeadership, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
+		{route: "exec/leader/find", handler: conmgr.FindLeadership},
 	}
 }
 
@@ -86,7 +94,7 @@ func checkAuthority(f *RouteHandler, token string) error {
 		return errors.New("token为空,可能没登陆")
 	}
 	// 查看权限
-	labels, err := conmgr.GetLabelsByToken(token)
+	labels, err := conmgr.GetLabelNamesByToken(token)
 	if err != nil {
 		return err
 	}
@@ -94,6 +102,9 @@ func checkAuthority(f *RouteHandler, token string) error {
 	for _, a := range f.meta.authority {
 		for _, l := range labels {
 			if l == a {
+				return nil
+			}
+			if a[0:1] == "%" && strings.HasSuffix(l, a[1:]) {
 				return nil
 			}
 		}

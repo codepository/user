@@ -66,8 +66,10 @@ func setupDB() {
 	// 	return "fznews_" + defaultTableName
 	// }
 	db.Set("gorm:table_options", "ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;").
-		AutoMigrate(&FznewsLogin{}).AutoMigrate(&FznewsRecord{})
+		AutoMigrate(&FznewsLogin{}).AutoMigrate(&FznewsRecord{}).AutoMigrate(&FznewsLeadership{})
 	db.Model(&FznewsLogin{}).AddUniqueIndex("user_id", "user_id")
+	db.Model(&FznewsLeadership{}).Omit("department_name")
+	db.Model(&FznewsLeadership{}).AddUniqueIndex("user_department", "user_id", "department_id")
 }
 
 // CloseDB closes database connection (unnecessary)

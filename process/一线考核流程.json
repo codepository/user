@@ -1,0 +1,222 @@
+{
+  "nodeId": "开始",
+  "type": "start",
+  "childNode": {
+    "type": "approver",
+    "nodeId": "上级审批",
+    "prevId": "开始",
+    "properties": {
+      "actionerRules": [
+        {
+          "attr": 1,
+          "type": 3,
+          "level": 1
+        }
+      ]
+    },
+    "conditionNodes": [
+      {
+        "nodeId": "新媒体中心特殊条件",
+        "prevId": "开始",
+        "type": "condition",
+        "properties": {
+          "conditions": [
+            {
+              "type": 0,
+              "paramKey": "departmentKey",
+              "paramLabel": "部门id",
+              "paramValues": [37, 41, 42, 47, 48, 49]
+            }
+          ]
+        },
+        "childNode": {
+          "type": "approver",
+          "nodeId": "新媒体中心二级领导审批",
+          "prevId": "新媒体中心特殊条件",
+          "properties": {
+            "actionerRules": [
+              {
+                "attr": 1,
+                "type": 2,
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "childNode": {
+      "type": "route",
+      "nodeId": "考核组路由",
+      "prevId": "开始",
+      "conditionNodes": [
+        {
+          "nodeId": "第一考核组条件",
+          "prevId": "考核组路由",
+          "type": "condition",
+          "properties": {
+            "conditions": [
+              {
+                "type": 0,
+                "paramKey": "khzKey",
+                "paramLabel": "考核组",
+                "paramValues": ["第一考核组成员"]
+              }
+            ]
+          },
+          "childNode": {
+            "type": "approver",
+            "nodeId": "第一考核组",
+            "prevId": "第一考核组条件",
+            "properties": {
+              "actionerRules": [
+                {
+                  "attr": 1,
+                  "type": 2,
+                  "labelName": "第一考核组考核员"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "nodeId": "第二考核组条件",
+          "prevId": "考核组路由",
+          "type": "condition",
+          "properties": {
+            "conditions": [
+              {
+                "type": 0,
+                "paramKey": "khzKey",
+                "paramLabel": "考核组",
+                "paramValues": ["第二考核组成员"]
+              }
+            ]
+          },
+          "childNode": {
+            "type": "approver",
+            "nodeId": "第二考核组",
+            "prevId": "第二考核组条件",
+            "properties": {
+              "actionerRules": [
+                {
+                  "attr": 1,
+                  "type": 2,
+                  "labelName": "第二考核组考核员"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "nodeId": "第三考核组条件",
+          "prevId": "考核组路由",
+          "type": "condition",
+          "properties": {
+            "conditions": [
+              {
+                "type": 0,
+                "paramKey": "khzKey",
+                "paramLabel": "考核组",
+                "paramValues": ["第三考核组成员"]
+              }
+            ]
+          },
+          "childNode": {
+            "type": "approver",
+            "nodeId": "第三考核组",
+            "prevId": "第三考核组条件",
+            "properties": {
+              "actionerRules": [
+                {
+                  "attr": 1,
+                  "type": 2,
+                  "labelName": "第三考核组考核员"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "nodeId": "第四考核组条件",
+          "prevId": "考核组路由",
+          "type": "condition",
+          "properties": {
+            "conditions": [
+              {
+                "type": 0,
+                "paramKey": "khzKey",
+                "paramLabel": "考核组",
+                "paramValues": ["第四考核组成员"]
+              }
+            ]
+          },
+          "childNode": {
+            "type": "approver",
+            "nodeId": "第四考核组",
+            "prevId": "第四考核组条件",
+            "properties": {
+              "actionerRules": [
+                {
+                  "attr": 1,
+                  "type": 2,
+                  "labelName": "第四考核组考核员"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "childNode": {
+        "type": "route",
+        "prevId": "考核组路由",
+        "nodeId": "职级路由",
+        "conditionNodes": [
+          {
+            "type": "condition",
+            "prevId": "职级路由",
+            "nodeId": "中层干部条件",
+            "properties": {
+              "conditions": [
+                {
+                  "type": 0,
+                  "paramKey": "zjKey",
+                  "paramLabel": "职级",
+                  "paramValues": [1, 2]
+                }
+              ]
+            },
+            "childNode": {
+              "type": "approver",
+              "nodeId": "考核办初审",
+              "prevId": "中层干部条件",
+              "properties": {
+                "actionerRules": [
+                  {
+                    "attr": 1,
+                    "type": 2,
+                    "labelName": "考核办初审成员"
+                  }
+                ]
+              },
+              "childNode": {
+                "type": "approver",
+                "prevId": "考核办初审",
+                "nodeId": "考核办审批",
+                "properties": {
+                  "actionerRules": [
+                    {
+                      "attr": 1,
+                      "type": 2,
+                      "labelName": "考核办审批成员"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

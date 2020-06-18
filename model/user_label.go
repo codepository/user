@@ -13,10 +13,10 @@ var UserLabelTable = "weixin_oauser_taguser"
 
 // WeixinOauserTaguser 用户标签
 type WeixinOauserTaguser struct {
-	ID        int    `gorm:"primary_key" json:"id,omitempty"`
-	UserID    int    `gorm:"column:uId" json:"uId,omitemtpy"`
-	TagID     int    `gorm:"column:tagId" json:"tagId,omitemtpy"`
-	LabelName string `json:"label_name,omitempty"`
+	ID      int    `gorm:"primary_key" json:"id,omitempty"`
+	UserID  int    `gorm:"column:uId" json:"uId,omitemtpy"`
+	TagID   int    `gorm:"column:tagId" json:"tagId,omitemtpy"`
+	TagName string `gorm:"column:tagName" json:"tagName"`
 }
 
 // FromMap 使用map进行赋值
@@ -47,7 +47,7 @@ func (u *WeixinOauserTaguser) ToString() string {
 // SaveOrUpdate 保存或更新
 func (u *WeixinOauserTaguser) SaveOrUpdate() error {
 
-	return wxdb.Where(WeixinOauserTaguser{UserID: u.UserID, TagID: u.TagID}).Assign(u).Omit("label_name").FirstOrCreate(u).Error
+	return wxdb.Where(WeixinOauserTaguser{UserID: u.UserID, TagID: u.TagID}).Assign(u).Omit("tagName").FirstOrCreate(u).Error
 }
 
 // DelSingle 删除一个
@@ -64,7 +64,7 @@ func (u *WeixinOauserTaguser) DelSingle() error {
 // FindUserLabels 查询用户标签
 func FindUserLabels(query interface{}) ([]*WeixinOauserTaguser, error) {
 	var labels []*WeixinOauserTaguser
-	err := wxdb.Table(fmt.Sprintf("%s u", UserLabelTable)).Select("u.uId as uId,l.id as tagId,l.tagName as label_name").
+	err := wxdb.Table(fmt.Sprintf("%s u", UserLabelTable)).Select("u.uId as uId,l.id as tagId,l.tagName as tagName").
 		Joins(fmt.Sprintf("join %s l on l.id=u.tagId", LabelTable)).
 		Where("uId in (?)", query).Find(&labels).Error
 	if err != nil {
@@ -84,5 +84,13 @@ func FindUsersByLabelIDs(ids []interface{}, offset, limit int) ([]*Userinfo, err
 		Offset(offset).
 		Limit(limit).
 		Find(&result).Error
+	return result, err
+}
+
+// FindUsersByLabelNames 根据标签名称查找用户名
+func FindUsersByLabelNames(names []string) ([]*Userinfo, error) {
+	var result []*Userinfo
+	err := wxdb.Raw("select * from weixin_leave_userinfo where id in (select uId from weixin_oauser_taguser where tagId in (select id from weixin_oauser_tag where tagName in (?)))", names).Scan(&result).Error
+
 	return result, err
 }

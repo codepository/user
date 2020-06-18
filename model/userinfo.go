@@ -3,13 +3,14 @@ package model
 import (
 	"errors"
 
+	"github.com/jinzhu/gorm"
 	"github.com/mumushuiding/util"
 )
 
 // Userinfo 同weixin_leave_userinfo对应
 type Userinfo struct {
 	ID             int    `json:"id,omitempty"`
-	UserID         string `json:"userid,omitempty"`
+	Userid         string `json:"userid"`
 	Name           string `json:"name,omitempty"`
 	DepartmentID   int    `json:"departmentid,omitempty"`
 	Departmentname string `json:"departmentname,omitempty"`
@@ -20,13 +21,19 @@ type Userinfo struct {
 	Avatar         string `json:"avatar,omitempty"`
 	Status         int    `json:"status,omitempty"`
 	//0是一般工作人员， 1中层正职（含主持工作的副职）, 2是中层副职，3是社领导
-	Level int `json:"level,omitempty"`
+	Level int `json:"level"`
 	// 1表示是部门领导，0表示非部门领导
-	IsLeader int `json:"is_leader,omitempty"`
+	IsLeader int `json:"is_leader"`
 }
 
 // UserinfoTabel 对应weixin_leave_userinfo表
 var UserinfoTabel = "weixin_leave_userinfo"
+
+// ToString ToString
+func (u *Userinfo) ToString() string {
+	str, _ := util.ToJSONStr(u)
+	return str
+}
 
 // UserLogin 用户登陆
 func UserLogin(account, password string) (*Userinfo, string, error) {
@@ -105,4 +112,35 @@ func FindAllUseridsByDepartmentids(departmentids []interface{}) ([]int, error) {
 	var ids []int
 	err := wxdb.Table(UserinfoTabel).Model(&Userinfo{}).Select("id").Where("departmentid in (?)", departmentids).Pluck("id", &ids).Error
 	return ids, err
+}
+
+// FindLeaderByUserID 若isLeader是0,用户上级为部门领导;若isLeader是1上级为分管部门的领导
+func FindLeaderByUserID(userID string, isLeader float64) ([]*Userinfo, error) {
+	var result []*Userinfo
+	if isLeader == 1 {
+		//
+		err := wxdb.Raw("select * from weixin_leave_userinfo u join fznews_leadership l on l.user_id=u.id and l.department_id in (select departmentid from weixin_leave_userinfo where userid=?)", userID).Scan(&result).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.New("该部门未设置分管领导,请联系管理员")
+		}
+	} else {
+		err := wxdb.Raw("select * from weixin_leave_userinfo where is_leader=1 and departmentid in (select departmentid from weixin_leave_userinfo where userid=?)", userID).Scan(&result).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.New("该部门未设置部门领导,请联系管理员")
+		}
+	}
+	return result, nil
+}
+
+// FindUserinfoByUserID 根据userID查询用户信息
+func FindUserinfoByUserID(userID string) (*Userinfo, error) {
+	var result *Userinfo
+	err := wxdb.Table(UserinfoTabel).Where("userid=?", userID).Find(result).Error
+	return result, err
 }

@@ -29,13 +29,20 @@ func GetAllUserinfo(user *model.Userinfo) ([]interface{}, error) {
 	var data []interface{}
 	data = append(data, user)
 	// 用户标签查询
-	labels, err := FindUserLabelNames([]int{user.ID})
+	labels, err := FindUserLabel([]int{user.ID})
 	if err != nil {
 		return nil, err
 	}
-
 	data = append(data, labels)
+	// 用户分管部门查询
+	leaership, err := model.FindFznewsLeadership(map[string]interface{}{"user_id": user.ID})
+	data = append(data, leaership)
 	return data, nil
+}
+
+// FindUserLabel FindUserLabel
+func FindUserLabel(query interface{}) ([]*model.WeixinOauserTaguser, error) {
+	return model.FindUserLabels(query)
 }
 
 // FindUserLabelNames 用户所有的标签
@@ -49,7 +56,7 @@ func FindUserLabelNames(query interface{}) ([]string, error) {
 	}
 	var n []string
 	for _, l := range labels {
-		n = append(n, l.LabelName)
+		n = append(n, l.TagName)
 	}
 	return n, nil
 }
@@ -105,11 +112,11 @@ func GetUsers(c *model.Container) error {
 }
 
 // AddLabel 添加标签
-func AddLabel(userID int, labelID int, labelName string) error {
+func AddLabel(userID int, tagID int, tagName string) error {
 	label := model.WeixinOauserTaguser{
-		UserID:    userID,
-		TagID:     labelID,
-		LabelName: labelName,
+		UserID:  userID,
+		TagID:   tagID,
+		TagName: tagName,
 	}
 	return label.SaveOrUpdate()
 }

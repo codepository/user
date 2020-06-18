@@ -54,7 +54,7 @@ func GetUserByToken(token string) (*model.Userinfo, error) {
 }
 
 // GetLabelsByToken 根据token获取用户标签
-func GetLabelsByToken(token string) ([]string, error) {
+func GetLabelsByToken(token string) ([]*model.WeixinOauserTaguser, error) {
 	userinfos := Conmgr.userMap[token]
 	if userinfos == nil {
 		return nil, errors.New("请重新登陆")
@@ -63,7 +63,23 @@ func GetLabelsByToken(token string) ([]string, error) {
 	if len(data) < 2 {
 		return nil, nil
 	}
-	return data[labelsCacheStatus].([]string), nil
+	return data[labelsCacheStatus].([]*model.WeixinOauserTaguser), nil
+}
+
+// GetLabelNamesByToken GetLabelNamesByToken
+func GetLabelNamesByToken(token string) ([]string, error) {
+	labels, err := GetLabelsByToken(token)
+	if err != nil {
+		return nil, err
+	}
+	if len(labels) == 0 {
+		return []string{}, nil
+	}
+	var n []string
+	for _, l := range labels {
+		n = append(n, l.TagName)
+	}
+	return n, nil
 }
 
 // ForgetPass 忘记密码

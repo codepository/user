@@ -1,0 +1,102 @@
+{
+    "errcode": 0,
+    "errmsg": "ok",
+    "data": {
+        "ThirdNo": "1575449311420",
+        "OpenTemplateId": "6281d14511cc1838b459383f00bb3188_541942624",
+        "OpenSpName": "\u8bf7\u5047(Y150401)",
+        "OpenSpstatus": 2,
+        "ApplyTime": 1575449371,
+        "ApplyUsername": "\u5434\u6587\u9716",
+        "ApplyUserParty": "",
+        "ApplyUserImage": "http:\/\/wework.qpic.cn\/bizmail\/RH542LqMW07gjasCW5TSzUAl8AmNJlhu1SADPTWLxicF8VSUZELoCKA\/0",
+        "ApplyUserId": "wuwenlin",
+        "ApprovalNodes": {
+            "ApprovalNode": [
+                {
+                    "NodeStatus": 2,
+                    "Items": {
+                        "Item": [
+                            {
+                                "ItemName": "\u8d3a\u9e4f",
+                                "ItemParty": "",
+                                "ItemImage": "http:\/\/wework.qpic.cn\/bizmail\/8JicR9icXLSxtibECOPbE95TaSa4ES9wGvVTQBPLohyUOI2FwbYWej4Pg\/0",
+                                "ItemUserId": "hepeng",
+                                "ItemStatus": 2,
+                                "ItemSpeech": "",
+                                "ItemOpTime": 1575449391
+                            }
+                        ]
+                    },
+                    "NodeAttr": 2,
+                    "NodeType": 1
+                },
+                {
+                    "NodeStatus": 2,
+                    "Items": {
+                        "Item": [
+                            {
+                                "ItemName": "\u6797\u4f1f",
+                                "ItemParty": "",
+                                "ItemImage": "http:\/\/wework.qpic.cn\/bizmail\/icoQ66UXKIGq9UpU28IbUosDpCRWRVVAdpoXgfhn6y3XTfvJCDahyQw\/0",
+                                "ItemUserId": "linwei",
+                                "ItemStatus": 2,
+                                "ItemSpeech": "",
+                                "ItemOpTime": 1575452425
+                            }
+                        ]
+                    },
+                    "NodeAttr": 1,
+                    "NodeType": 1
+                },
+                {
+                    "NodeStatus": 2,
+                    "Items": {
+                        "Item": [
+                            {
+                                "ItemName": "\u738b  \u5b87",
+                                "ItemParty": "",
+                                "ItemImage": "http:\/\/wework.qpic.cn\/bizmail\/S2Mldia8ubJjkt5LPxaswpicZ2pG9LfYF6mfXVR83dZibT4wa9KsibUXKg\/0",
+                                "ItemUserId": "wangyu",
+                                "ItemStatus": 2,
+                                "ItemSpeech": "",
+                                "ItemOpTime": 1575452558
+                            }
+                        ]
+                    },
+                    "NodeAttr": 1,
+                    "NodeType": 1
+                },
+                {
+                    "NodeStatus": 2,
+                    "Items": {
+                        "Item": [
+                            {
+                                "ItemName": "\u9648\u6ee8\u5cf0",
+                                "ItemParty": "",
+                                "ItemImage": "http:\/\/wework.qpic.cn\/bizmail\/PBxsibv4HtaVGMMJS2p4cJanDDibzkOb56rpDggiaq4f1xNBMDxK1F7Wg\/0",
+                                "ItemUserId": "chenbinfeng",
+                                "ItemStatus": 2,
+                                "ItemSpeech": "",
+                                "ItemOpTime": 1575457109
+                            }
+                        ]
+                    },
+                    "NodeAttr": 1,
+                    "NodeType": 1
+                }
+            ]
+        },
+        "NotifyNodes": {
+            "NotifyNode": [
+                {
+                    "ItemName": "\u90ed\u6676\u6676",
+                    "ItemParty": "",
+                    "ItemImage": "http:\/\/wework.qpic.cn\/bizmail\/rLTV665LeIRjfdsib61Z7TzH5tvM4H9qNcj1BKo3NmRvibhJTiae7eEfA\/0",
+                    "ItemUserId": "guojingjing"
+                }
+            ]
+        },
+        "approverstep": 3
+    }
+}

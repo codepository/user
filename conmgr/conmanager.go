@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	departmentInfo = "部门信息缓存"
-	labelsCache    = "标签缓存"
+	departmentInfo  = "部门信息缓存"
+	labelsCache     = "标签缓存"
+	leadershipCache = "分管部门缓存"
 )
 
 // Conmgr 程序唯一的一个连接管理器
@@ -105,7 +106,7 @@ func RefreshCacheMap() {
 // refreshUserMap 更新用户信息
 func refreshUserMap() {
 	log.Println("刷新用户信息缓存")
-	clearUserMap()
+	// clearUserMap()
 	// 查询所有的用户
 	users, err := service.FindAllUserInfo(map[string]interface{}{})
 	if err != nil {
@@ -196,7 +197,7 @@ func GetUserByID(c *model.Container) error {
 	login.Find()
 	token := login.Password
 	if Conmgr.userMap[token] == nil {
-
+		refreshUserMap()
 	}
 	c.Body.Data = Conmgr.userMap[token].([]interface{})
 	return nil
@@ -296,7 +297,7 @@ func AddUserLabel(c *model.Container) error {
 	for i, v := range data {
 		ul, ok := v.(map[string]interface{})
 		if !ok {
-			strbuffer.WriteString(fmt.Sprintf("第[%d]条添加失败,err:%s,", (i + 1), "参数类型:{'body':{'data':[{'user_id':1,'label_id:0,'label_name':'一线考核'}]}}"))
+			strbuffer.WriteString(fmt.Sprintf("第[%d]条添加失败,err:%s,", (i + 1), "参数类型:{'body':{'data':[{'uId':1,'tagId':0}]}}"))
 			continue
 		}
 		userlabel := &model.WeixinOauserTaguser{}
