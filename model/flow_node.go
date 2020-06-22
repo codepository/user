@@ -207,7 +207,7 @@ func (n *Node) Parse(params map[string]interface{}) ([]*ApprovalNode, []*Approva
 		cn, yes := current.(*Node)
 		if yes {
 			// 执行节点操作
-			an, err := cn.execute(params["userid"].(string), params["approverid"], params["isleader"].(float64))
+			an, err := cn.execute(params["userid"].(string), params["approverid"], params["isleader"].(float64), params["departmentKey"].(int))
 			if err != nil {
 				return nil, nil, err
 			}
@@ -248,7 +248,7 @@ func (n *Node) Parse(params map[string]interface{}) ([]*ApprovalNode, []*Approva
 }
 
 // 执行节点操作，只生成审批人和抄送人
-func (n *Node) execute(userID string, approverid interface{}, isleader float64) (*ApprovalNode, error) {
+func (n *Node) execute(userID string, approverid interface{}, isleader float64, departmentid int) (*ApprovalNode, error) {
 	if len(n.Type) == 0 {
 		return nil, fmt.Errorf("nodeId为'%s'的节点,type不能为空type: start 开始,approver 审批人,end 结束,notifier 抄送人", n.NodeID)
 	}
@@ -277,13 +277,40 @@ func (n *Node) execute(userID string, approverid interface{}, isleader float64) 
 		}
 		switch a.Type {
 		case 3:
-			// 查询用户的上级，若是普通员工他的上级即是部门领导，若是部门领导他的上级是该部门的分管领导
-			users, err := FindLeaderByUserID(userID, isleader)
-			if err != nil {
-				return nil, err
+			// 查询用户的上级，若是普通员工他的上级即是部门领导，
+			var users []*Userinfo
+			var err error
+			if isleader == 1 {
+				// 若是部门领导他的上级是该部门的分管领导
+				users, err = FindLeaderByUserID(userID, isleader)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				// 若是普通员工且ActionerRules[0].Level==1则他的上级即是部门领导
+				// 若是普通员工且ActionerRules[0].Level==2，则他的上级则是上级部门领导
+				// 以此类推
+				switch n.Properties.ActionerRules[0].Level {
+				case 1:
+					users, err = FindLeaderByUserID(userID, isleader)
+					if err != nil {
+						return nil, err
+					}
+					break
+				case 2:
+
+					users, err = FindSecondLeaderByDepartmentid(departmentid)
+					if err != nil {
+						return nil, err
+					}
+					break
+				default:
+
+				}
 			}
+
 			if len(users) == 0 {
-				return nil, errors.New("你的部门未设置领导,无法提交")
+				return nil, fmt.Errorf("部门[%d]未设置领导,无法提交", departmentid)
 			}
 			for _, u := range users {
 				result.Items.Item = append(result.Items.Item, &Approver{
@@ -352,7 +379,7 @@ func (n *Node) check(params map[string]interface{}) (bool, error) {
 	if n.Properties == nil || n.Properties.Conditions == nil || len(n.Properties.Conditions) == 0 {
 		return false, fmt.Errorf("nodeId为:%s的Properties.Conditions值不能为空", n.NodeID)
 	}
-	flag := false
+	flag := 0
 	for _, c := range n.Properties.Conditions {
 		err := c.validate()
 		if err != nil {
@@ -362,19 +389,19 @@ func (n *Node) check(params map[string]interface{}) (bool, error) {
 			for _, v := range c.ParamValues {
 				// log.Println("v:", reflect.TypeOf(v))
 				// log.Println("key:", reflect.TypeOf(params[c.ParamKey]))
-				// log.Printf("匹配条件:v:%vkey:%s,keyval:%v.\n", v, c.ParamKey, params[c.ParamKey])
+				log.Printf("匹配条件:v:%vkey:%s,keyval:%v.\n", v, c.ParamKey, params[c.ParamKey])
 				vstr, _ := util.ToJSONStr(v)
 				kstr, _ := util.ToJSONStr(params[c.ParamKey])
 
 				if vstr == kstr {
 					// log.Printf("匹配成功:v:%v,key:%s,keyval:%v.\n", v, c.ParamKey, params[c.ParamKey])
-					flag = true
+					flag++
 					break
 				}
 			}
 		}
 	}
-	return flag, nil
+	return flag == len(n.Properties.Conditions), nil
 }
 
 // checkParmas 验证参数的有效性

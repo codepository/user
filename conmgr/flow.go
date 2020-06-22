@@ -53,6 +53,7 @@ func StartFlowByToken(c *model.Container) error {
 	params["zjKey"] = user.Level
 	params["templateId"] = c.Body.Metrics
 	params["isleader"] = float64(user.IsLeader)
+	params["departmentKey"] = user.DepartmentID
 	result, notify, err := n.Parse(params)
 	if err != nil {
 		return err

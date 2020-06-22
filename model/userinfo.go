@@ -12,7 +12,7 @@ type Userinfo struct {
 	ID             int    `json:"id,omitempty"`
 	Userid         string `json:"userid"`
 	Name           string `json:"name,omitempty"`
-	DepartmentID   int    `json:"departmentid,omitempty"`
+	DepartmentID   int    `gorm:"column:departmentid" json:"departmentid,omitempty"`
 	Departmentname string `json:"departmentname,omitempty"`
 	Position       string `json:"position,omitempty"`
 	Mobile         string `json:"mobile,omitempty"`
@@ -112,6 +112,19 @@ func FindAllUseridsByDepartmentids(departmentids []interface{}) ([]int, error) {
 	var ids []int
 	err := wxdb.Table(UserinfoTabel).Model(&Userinfo{}).Select("id").Where("departmentid in (?)", departmentids).Pluck("id", &ids).Error
 	return ids, err
+}
+
+// FindSecondLeaderByDepartmentid 上级的上级的领导
+func FindSecondLeaderByDepartmentid(departmentid int) ([]*Userinfo, error) {
+	var result []*Userinfo
+	err := wxdb.Raw("select * from weixin_leave_userinfo where is_leader=1 and departmentid in (select parentid from weixin_leave_department where id=?)", departmentid).Scan(&result).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	if err == gorm.ErrRecordNotFound {
+		return nil, errors.New("该部门不存在二级部门领导,请联系管理员")
+	}
+	return result, nil
 }
 
 // FindLeaderByUserID 若isLeader是0,用户上级为部门领导;若isLeader是1上级为分管部门的领导

@@ -5,15 +5,7 @@
     "type": "approver",
     "nodeId": "上级审批",
     "prevId": "开始",
-    "properties": {
-      "actionerRules": [
-        {
-          "attr": 1,
-          "type": 3,
-          "level": 1
-        }
-      ]
-    },
+    "properties": { "actionerRules": [{ "attr": 1, "type": 3, "level": 1 }] },
     "conditionNodes": [
       {
         "nodeId": "新媒体中心特殊条件",
@@ -26,6 +18,12 @@
               "paramKey": "departmentKey",
               "paramLabel": "部门id",
               "paramValues": [37, 41, 42, 47, 48, 49]
+            },
+            {
+              "type": 0,
+              "paramKey": "isleader",
+              "paramLabel": "是否是领导",
+              "paramValues": [1]
             }
           ]
         },
@@ -34,13 +32,7 @@
           "nodeId": "新媒体中心二级领导审批",
           "prevId": "新媒体中心特殊条件",
           "properties": {
-            "actionerRules": [
-              {
-                "attr": 1,
-                "type": 2,
-                "level": 2
-              }
-            ]
+            "actionerRules": [{ "attr": 1, "type": 3, "level": 2 }]
           }
         }
       }
@@ -70,11 +62,7 @@
             "prevId": "第一考核组条件",
             "properties": {
               "actionerRules": [
-                {
-                  "attr": 1,
-                  "type": 2,
-                  "labelName": "第一考核组考核员"
-                }
+                { "attr": 1, "type": 2, "labelName": "第一考核组考核员" }
               ]
             }
           }
@@ -99,11 +87,7 @@
             "prevId": "第二考核组条件",
             "properties": {
               "actionerRules": [
-                {
-                  "attr": 1,
-                  "type": 2,
-                  "labelName": "第二考核组考核员"
-                }
+                { "attr": 1, "type": 2, "labelName": "第二考核组考核员" }
               ]
             }
           }
@@ -128,11 +112,7 @@
             "prevId": "第三考核组条件",
             "properties": {
               "actionerRules": [
-                {
-                  "attr": 1,
-                  "type": 2,
-                  "labelName": "第三考核组考核员"
-                }
+                { "attr": 1, "type": 2, "labelName": "第三考核组考核员" }
               ]
             }
           }
@@ -157,11 +137,7 @@
             "prevId": "第四考核组条件",
             "properties": {
               "actionerRules": [
-                {
-                  "attr": 1,
-                  "type": 2,
-                  "labelName": "第四考核组考核员"
-                }
+                { "attr": 1, "type": 2, "labelName": "第四考核组考核员" }
               ]
             }
           }
@@ -192,11 +168,7 @@
               "prevId": "中层干部条件",
               "properties": {
                 "actionerRules": [
-                  {
-                    "attr": 1,
-                    "type": 2,
-                    "labelName": "考核办初审成员"
-                  }
+                  { "attr": 1, "type": 2, "labelName": "考核办初审成员" }
                 ]
               },
               "childNode": {
@@ -205,11 +177,7 @@
                 "nodeId": "考核办审批",
                 "properties": {
                   "actionerRules": [
-                    {
-                      "attr": 1,
-                      "type": 2,
-                      "labelName": "考核办审批成员"
-                    }
+                    { "attr": 1, "type": 2, "labelName": "考核办审批成员" }
                   ]
                 }
               }
