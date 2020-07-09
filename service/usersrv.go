@@ -16,6 +16,7 @@ func UserLoginAndFindUserinfo(account, password string) (*model.Container, error
 	var c model.Container
 	c.Header.Token = token
 	// 根据用户查询所有的用户信息
+	c.Body.Fields = []string{"用户信息", "用户标签", "分管部门", "可访问的受限url路径"}
 	data, err := GetAllUserinfo(user)
 	if err != nil {
 		return nil, err
@@ -37,6 +38,24 @@ func GetAllUserinfo(user *model.Userinfo) ([]interface{}, error) {
 	// 用户分管部门查询
 	leaership, err := model.FindFznewsLeadership(map[string]interface{}{"user_id": user.ID})
 	data = append(data, leaership)
+	// 可访问的受限url路径
+	var role []string
+	for _, label := range labels {
+		role = append(role, label.TagName)
+	}
+	var list []string
+	permissionlist, err := model.FindAllPermissionByRoles(role)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, p := range permissionlist {
+		list = append(list, p.URL)
+	}
+	if list == nil {
+		list = make([]string, 0)
+	}
+	data = append(data, list)
 	return data, nil
 }
 

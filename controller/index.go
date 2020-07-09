@@ -47,6 +47,22 @@ func GetBody2Struct(request *http.Request, pojo interface{}) error {
 	return json.Unmarshal(s, pojo)
 }
 
+// Logout 登出
+func Logout(w http.ResponseWriter, r *http.Request) {
+	// 获取token
+	token, err := GetToken(r)
+	if err != nil {
+		util.ResponseErr(w, err)
+		return
+	}
+	err = conmgr.Logout(token)
+	if err != nil {
+		util.ResponseErr(w, err)
+		return
+	}
+	util.ResponseOk(w)
+}
+
 // Login 登陆
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -104,6 +120,10 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 	if len(par.Body.Method) == 0 {
 		util.ResponseErr(w, "method不能为空")
 		return
+	}
+	token := par.Header.Token
+	if len(token) == 0 {
+		token, _ = GetToken(r)
 	}
 	f, err := GetRoute(par.Body.Method, par.Header.Token)
 	if err != nil {

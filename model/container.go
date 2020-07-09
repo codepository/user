@@ -27,6 +27,7 @@ type CBody struct {
 	StartDate  string        `json:"start_date,omitempty"`
 	EndDate    string        `json:"end_date,omitempty"`
 	UserName   string        `json:"username,omitempty"`
+	UserID     int           `json:"user_id,omitempty"`
 	Method     string        `json:"method,omitempty"`
 	Metrics    string        `json:"metrics,omitempty"`
 	Fields     []string      `json:"fields,omitempty"`

@@ -3,16 +3,20 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/codepository/user/conmgr"
 	"github.com/codepository/user/model"
 	"github.com/codepository/user/service"
+	"github.com/mumushuiding/util"
 )
 
 const (
 	// SysManagerAuthority SysManagerAuthority
 	SysManagerAuthority = "系统管理员"
+	// AdvertiseAuthority 广告管理权限
+	AdvertiseAuthority = "广告管理"
 )
 
 // RouteFunction 根据路径指向方法
@@ -64,6 +68,11 @@ func SetRouters() {
 		{route: "exec/leader/add", handler: conmgr.AddLeadership, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 		{route: "exec/leader/delbyid", handler: conmgr.DelByIDLeadership, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 		{route: "exec/leader/find", handler: conmgr.FindLeadership},
+		// 行业查询权限管理
+		{route: "visit/org/findOrgidsByUserid", handler: conmgr.FindOrgidsByUserid},
+		{route: "visit/org/findUserByOrgid", handler: conmgr.FindUserByOrgid},
+		{route: "visit/org/delUserOrgByIds", handler: conmgr.DelUserOrgByID},
+		{route: "visit/org/saveUserOrg", handler: conmgr.SaveUserOrg, meta: &RouteMeta{authority: []string{AdvertiseAuthority}}},
 	}
 }
 
@@ -116,4 +125,28 @@ func checkAuthority(f *RouteHandler, token string) error {
 
 	return fmt.Errorf("需要权限:%v", strings.Join(f.meta.authority, ","))
 
+}
+
+// HasPermission 指定角色是否有访问指定路径的权限
+func HasPermission(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	if len(r.Form["token"]) == 0 {
+		util.ResponseErr(w, "参数token不能为空")
+		return
+	}
+	token := r.Form["token"][0]
+	if len(r.Form["url"]) == 0 {
+		util.ResponseErr(w, "参数url不能为空")
+	}
+	url := r.Form["url"][0]
+	result, err := conmgr.HasPermission(token, url)
+	if err != nil {
+		fmt.Fprintf(w, "{\"message\":\"%s\",\"flag\":%t,\"status\":400}", err.Error(), false)
+		return
+	}
+	if result {
+		fmt.Fprintf(w, "{\"message\":\"%s\",\"flag\":%t,\"status\":200}", "允许访问", result)
+		return
+	}
+	fmt.Fprintf(w, "{\"message\":\"%s\",\"ok\":%t,\"status\":200}", "无访问"+url+"权限", result)
 }
