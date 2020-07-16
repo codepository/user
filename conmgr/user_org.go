@@ -65,6 +65,7 @@ func DelUserOrgByID(c *model.Container) error {
 	}
 	err := model.DelUserOrg(par)
 	if err != nil {
+
 		return err
 	}
 	return nil
