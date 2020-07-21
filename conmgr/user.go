@@ -2,6 +2,7 @@ package conmgr
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/codepository/user/config"
@@ -111,7 +112,7 @@ func ForgetPass(c *model.Container) error {
 		return err
 	}
 	if len(users) == 0 {
-		return errors.New("邮箱没有注册,找管理员")
+		return errors.New("邮箱是不正确或邮箱未绑定")
 	}
 	// 重置密码
 	rand := util.RandomNumbers(5)
@@ -123,8 +124,9 @@ func ForgetPass(c *model.Container) error {
 	// 发送密码给用户
 	err = service.SendMail([]string{c.Body.Metrics}, config.Config.EmailUser, "修改密码", "登陆密码:"+rand)
 	if err != nil {
-		c.Header.Msg = "修改成功，请查看邮箱"
+		return fmt.Errorf("发送邮件失败:%s", err.Error())
 	}
+	c.Header.Msg = "修改成功，请查看邮箱"
 	return nil
 
 }

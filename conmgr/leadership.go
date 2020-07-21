@@ -2,6 +2,8 @@ package conmgr
 
 import (
 	"errors"
+	"log"
+	"reflect"
 
 	"github.com/codepository/user/model"
 )
@@ -11,7 +13,7 @@ func AddLeadership(c *model.Container) error {
 	// 参数检查
 	datas := c.Body.Data
 	if datas == nil || len(datas) < 2 {
-		return errors.New(`查询参数不能为空,如{"body":{"data":[[1,2],[3]]}},1,2为部门id,3为用户id`)
+		return errors.New(`查询参数不能为空,如{"body":{"data":[[{"id":1,"name":"部门1"},{"id":2,"name":"部门2"}],[3]]}},3为用户id`)
 	}
 
 	// 参数提取
@@ -19,15 +21,22 @@ func AddLeadership(c *model.Container) error {
 	// if !yes {
 	// 	return errors.New("部门id应该为数组")
 	// }
-	ds := datas[0].([]interface{})
+	ds, yes := datas[0].([]interface{})
+	if !yes {
+		return errors.New(`查询参数不能为空,如{"body":{"data":[[{"id":1,"name":"部门1"},{"id":2,"name":"部门2"}],[3]]}},3为用户id`)
+	}
 	uid, yes := datas[1].(float64)
 	if !yes {
 		return errors.New("用户id必须为数字")
 	}
 	// 添加
 	for _, d := range ds {
-
-		f := model.FznewsLeadership{UserID: int(uid), DepartmentID: int(d.(float64))}
+		dm, yes := d.(map[string]interface{})
+		log.Println(reflect.TypeOf(d))
+		if !yes {
+			return errors.New(`查询参数不能为空,如{"body":{"data":[[{"id":1,"name":"部门1"},{"id":2,"name":"部门2"}],[3]]}},3为用户id`)
+		}
+		f := model.FznewsLeadership{UserID: int(uid), DepartmentID: int(dm["id"].(float64)), DepartmentName: dm["name"].(string)}
 		err := f.SaveOrUpdate()
 		if err != nil {
 			return err

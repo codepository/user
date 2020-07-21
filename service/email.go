@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/tls"
 	"strconv"
 
 	"github.com/codepository/user/config"
@@ -19,6 +20,7 @@ func SendMail(mailTo []string, from, subject string, body string) error {
 	m.SetBody("text/html", body)
 	port, _ := strconv.Atoi(config.EmailPort)
 	d := gomail.NewDialer(config.EmailHost, port, config.EmailUser, config.EmailPass)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	err := d.DialAndSend(m)
 	return err
 }

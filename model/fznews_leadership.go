@@ -12,8 +12,8 @@ type FznewsLeadership struct {
 
 // SaveOrUpdate 不存在保存，存在就更新
 func (f *FznewsLeadership) SaveOrUpdate() error {
-	if f.UserID == 0 || f.DepartmentID == 0 {
-		return errors.New("用户ID和部门ID不能为空")
+	if f.UserID == 0 || f.DepartmentID == 0 || len(f.DepartmentName) == 0 {
+		return errors.New("user_id、department_id、department_name 不能为空")
 	}
 	return db.Where(FznewsLeadership{UserID: f.UserID, DepartmentID: f.DepartmentID}).Assign(*f).FirstOrCreate(f).Error
 }
@@ -29,8 +29,7 @@ func DelFznewsLeadership(query interface{}) error {
 // FindFznewsLeadership FindFznewsLeadership
 func FindFznewsLeadership(query interface{}) ([]*FznewsLeadership, error) {
 	var result []*FznewsLeadership
-	err := db.Table("fznews_leadership").Select("fznews_leadership.id,fznews_leadership.user_id,fznews_leadership.department_id,fznews_leadership.createTime,d.name as department_name").
-		Joins("join weixin_leave_department d on d.id=department_id").
+	err := db.Table("fznews_leadership").Select("fznews_leadership.id,fznews_leadership.user_id,fznews_leadership.department_id,fznews_leadership.department_name").
 		Where(query).Find(&result).Error
 	return result, err
 }
