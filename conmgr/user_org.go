@@ -88,5 +88,6 @@ func SaveUserOrg(c *model.Container) error {
 		return err
 	}
 	c.Body.Data = nil
+
 	return nil
 }
