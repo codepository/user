@@ -87,7 +87,7 @@ func FindUsersByLabelIDs(ids []interface{}, offset, limit int) ([]*Userinfo, err
 	return result, err
 }
 
-// FindUsersByLabelNames 根据标签名称查找用户名
+// FindUsersByLabelNames 根据标签名称查找用户
 func FindUsersByLabelNames(names []string) ([]*Userinfo, error) {
 	var result []*Userinfo
 	err := wxdb.Raw("select * from weixin_leave_userinfo where id in (select uId from weixin_oauser_taguser where tagId in (select id from weixin_oauser_tag where tagName in (?)))", names).Scan(&result).Error

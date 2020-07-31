@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/codepository/user/config"
-
 	"github.com/codepository/user/controller"
 )
 

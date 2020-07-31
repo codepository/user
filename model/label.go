@@ -51,3 +51,10 @@ func GetLabels() ([]*WeixinOauserTag, error) {
 	err := wxdb.Find(&result).Error
 	return result, err
 }
+
+// FindAllTags 查询所有标签
+func FindAllTags(query interface{}, values ...interface{}) ([]*WeixinOauserTag, error) {
+	var datas []*WeixinOauserTag
+	err := wxdb.Where(query, values...).Find(&datas).Error
+	return datas, err
+}

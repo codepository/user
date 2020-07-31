@@ -2,8 +2,11 @@ package service
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/codepository/user/model"
+	"github.com/mumushuiding/util"
 )
 
 // UserLoginAndFindUserinfo 用户登陆
@@ -123,6 +126,105 @@ func UpdatePassword(userid int, password string) error {
 // FindAllUserInfo 查询用户信息
 func FindAllUserInfo(query interface{}) ([]*model.Userinfo, error) {
 	return model.FindAllUserInfo(query)
+}
+
+// GetUseridsByTagAndLevel GetUseridsByTagAndLevel
+func GetUseridsByTagAndLevel(c *model.Container) error {
+	errstr := `参数格式:{"body":{"data":[{"tags":["第一考核组成员","项目舞台"],"tag_method":"and","level":1}]}}, and表示同时拥有"第一考核组成员","项目舞台"标签的用户`
+	var err error
+	// 参数解析
+	if c.Body.Data == nil || len(c.Body.Data) == 0 {
+		return errors.New(errstr)
+	}
+	par, ok := c.Body.Data[0].(map[string]interface{})
+	if len(par) == 0 {
+		return errors.New(errstr)
+	}
+	if !ok {
+		return errors.New(errstr)
+	}
+	// 标签判断
+	tags, ok := par["tags"].([]interface{})
+	if !ok {
+		return errors.New(errstr)
+	}
+	// 根据标签名称获取标签集合
+	tagids, err := FindTagidsByTagName(tags)
+	if err != nil {
+		return err
+	}
+	method, ok := par["tag_method"].(string)
+	if !ok {
+		return errors.New(errstr)
+	}
+	fields := "id"
+	var users []*model.Userinfo
+	if par["level"] != nil {
+		level, err := util.Interface2Int(par["level"])
+		if err != nil {
+			return errors.New(errstr)
+		}
+		users, err = FindUsersByTagidsAndLevel(tagids, level, method, fields)
+		if err != nil {
+			return nil
+		}
+	} else {
+		users, err = FindUsersByTagids(tagids, method, fields)
+		if err != nil {
+			return nil
+		}
+	}
+	var userids []int
+	for _, user := range users {
+		userids = append(userids, user.ID)
+	}
+	c.Body.Data = c.Body.Data[:0]
+	c.Body.Data = append(c.Body.Data, userids)
+	return nil
+}
+func generateSQL(tagids []int, method, fields string) *strings.Builder {
+	size := len(tagids)
+	if len(fields) == 0 {
+		fields = "*"
+	}
+	var sqlbuff strings.Builder
+	sqlbuff.WriteString("select " + fields + " from " + model.UserinfoTabel + " where id in (select uId from " + model.UserLabelTable + " where ")
+	if method == "and" {
+		var tagidsbuff strings.Builder
+		for _, tag := range tagids {
+			tagidsbuff.WriteString(fmt.Sprintf(" or tagId=%d", tag))
+		}
+		sqlbuff.WriteString(fmt.Sprintf("(%s) group by uId having count(uId)=%d)", tagidsbuff.String()[3:], size))
+	} else {
+		var tagidsbuff strings.Builder
+		for _, tag := range tagids {
+			tagidsbuff.WriteString(fmt.Sprintf(",%d", tag))
+		}
+		sqlbuff.WriteString("tagId in (" + tagidsbuff.String()[1:] + "))")
+	}
+	return &sqlbuff
+}
+
+// FindUsersByTagids 根据用户标查询
+// fields 表示查询的字段
+// method 有两个值 and 表示与查询，or表示或查询
+// 多标签查询 select id,name from weixin_leave_userinfo where  id in (select uId from weixin_oauser_taguser where (tagId=29 or tagId=36) group by uId having count(uId)=2);
+func FindUsersByTagids(tagids []int, method, fields string) ([]*model.Userinfo, error) {
+	if len(tagids) == 0 {
+		return nil, errors.New("tagids 不能为空")
+	}
+	sqlbuff := generateSQL(tagids, method, fields)
+	return model.FindAllUserinfoByRawSQL(sqlbuff.String())
+}
+
+// FindUsersByTagidsAndLevel FindUsersByTagidsAndLevel
+func FindUsersByTagidsAndLevel(tagids []int, level int, method, fields string) ([]*model.Userinfo, error) {
+	if len(tagids) == 0 {
+		return nil, errors.New("tagids 不能为空")
+	}
+	sqlbuff := generateSQL(tagids, method, fields)
+	sqlbuff.WriteString(fmt.Sprintf(" and level=%d", level))
+	return model.FindAllUserinfoByRawSQL(sqlbuff.String())
 }
 
 // GetUsers 分页查询用户信息

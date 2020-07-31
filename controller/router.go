@@ -3,13 +3,11 @@ package controller
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/codepository/user/conmgr"
 	"github.com/codepository/user/model"
 	"github.com/codepository/user/service"
-	"github.com/mumushuiding/util"
 )
 
 const (
@@ -21,9 +19,6 @@ const (
 
 // RouteFunction 根据路径指向方法
 type RouteFunction func(*model.Container) error
-
-// RouterMap 路由
-var RouterMap map[string]*RouteHandler
 
 // RouteHandler 路由
 type RouteHandler struct {
@@ -43,6 +38,7 @@ var routers []*RouteHandler
 // SetRouters 设置路由
 func SetRouters() {
 	routers = []*RouteHandler{
+		// =================== 用户 ===================
 		{route: "visit/user/userinfoByToken", handler: conmgr.GetUserinfo},
 		{route: "visit/user/getUserByID", handler: conmgr.GetUserByID},
 		// 用户添加角色
@@ -56,6 +52,8 @@ func SetRouters() {
 		{route: "exec/user/forgetPass", handler: conmgr.ForgetPass},
 		{route: "exec/user/alterPass", handler: conmgr.AlterPass},
 		{route: "visit/department/all", handler: conmgr.FindAllDepartment},
+		// 根据标签和职级查询用户id,level是职级
+		{route: "visit/user/getUseridsByTagAndLevel", handler: service.GetUseridsByTagAndLevel},
 		// 查询所有标签
 		{route: "visit/lable/all", handler: conmgr.FindAllLabel},
 		// 添加新的标签
@@ -64,15 +62,21 @@ func SetRouters() {
 		{route: "exec/flow/startByToken", handler: conmgr.StartFlowByToken, meta: &RouteMeta{
 			authority: []string{"%考核组成员"},
 		}},
-		// 分管领导管理
+		//=============== 分管领导管理===================
 		{route: "exec/leader/add", handler: conmgr.AddLeadership, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 		{route: "exec/leader/delbyid", handler: conmgr.DelByIDLeadership, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 		{route: "exec/leader/find", handler: conmgr.FindLeadership},
-		// 行业查询权限管理
+		// ===============行业查询权限管理================
 		{route: "visit/org/findOrgidsByUserid", handler: conmgr.FindOrgidsByUserid},
 		{route: "visit/org/findUserByOrgid", handler: conmgr.FindUserByOrgid},
 		{route: "visit/org/delUserOrgByIds", handler: conmgr.DelUserOrgByID},
 		{route: "visit/org/saveUserOrg", handler: conmgr.SaveUserOrg, meta: &RouteMeta{authority: []string{AdvertiseAuthority}}},
+		// ===============任务=====================
+		{route: "exec/task/yxkh", handler: conmgr.NewYxkhTask},
+		{route: "visit/task/completeRate", handler: conmgr.TaskCompleteRate},
+		{route: "visit/task/uncomplete", handler: conmgr.TaskUncomplete},
+		// 任务 查询任务对应的角色组
+		{route: "visit/task/taskRoles", handler: conmgr.FindTaskRoles},
 	}
 }
 
@@ -125,28 +129,4 @@ func checkAuthority(f *RouteHandler, token string) error {
 
 	return fmt.Errorf("需要权限:%v", strings.Join(f.meta.authority, ","))
 
-}
-
-// HasPermission 指定角色是否有访问指定路径的权限
-func HasPermission(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	if len(r.Form["token"]) == 0 {
-		util.ResponseErr(w, "参数token不能为空")
-		return
-	}
-	token := r.Form["token"][0]
-	if len(r.Form["url"]) == 0 {
-		util.ResponseErr(w, "参数url不能为空")
-	}
-	url := r.Form["url"][0]
-	result, err := conmgr.HasPermission(token, url)
-	if err != nil {
-		fmt.Fprintf(w, "{\"message\":\"%s\",\"flag\":%t,\"status\":400}", err.Error(), false)
-		return
-	}
-	if result {
-		fmt.Fprintf(w, "{\"message\":\"%s\",\"flag\":%t,\"status\":200}", "允许访问", result)
-		return
-	}
-	fmt.Fprintf(w, "{\"message\":\"%s\",\"ok\":%t,\"status\":200}", "无访问"+url+"权限", result)
 }

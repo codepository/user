@@ -9,6 +9,7 @@ import (
 
 	"github.com/codepository/user/conmgr"
 	"github.com/codepository/user/model"
+
 	"github.com/mumushuiding/util"
 )
 
@@ -136,4 +137,28 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	util.ResponseData(w, par.ToString())
+}
+
+// HasPermission 指定角色是否有访问指定路径的权限
+func HasPermission(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	if len(r.Form["token"]) == 0 {
+		util.ResponseErr(w, "参数token不能为空")
+		return
+	}
+	token := r.Form["token"][0]
+	if len(r.Form["url"]) == 0 {
+		util.ResponseErr(w, "参数url不能为空")
+	}
+	url := r.Form["url"][0]
+	result, err := conmgr.HasPermission(token, url)
+	if err != nil {
+		fmt.Fprintf(w, "{\"message\":\"%s\",\"flag\":%t,\"status\":400}", err.Error(), false)
+		return
+	}
+	if result {
+		fmt.Fprintf(w, "{\"message\":\"%s\",\"flag\":%t,\"status\":200}", "允许访问", result)
+		return
+	}
+	fmt.Fprintf(w, "{\"message\":\"%s\",\"ok\":%t,\"status\":200}", "无访问"+url+"权限", result)
 }

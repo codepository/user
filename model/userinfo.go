@@ -100,6 +100,13 @@ func FindNewUserinfoIDs(last int) ([]int, error) {
 	return ids, err
 }
 
+// FindAllUserinfoByRawSQL 根据rawsql查询
+func FindAllUserinfoByRawSQL(rawSQL string, values ...interface{}) ([]*Userinfo, error) {
+	var datas []*Userinfo
+	err := wxdb.Raw(rawSQL, values...).Scan(&datas).Error
+	return datas, err
+}
+
 // FindAllUserInfo 查询所有用户
 func FindAllUserInfo(query interface{}) ([]*Userinfo, error) {
 	var users []*Userinfo

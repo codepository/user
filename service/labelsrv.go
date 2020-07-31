@@ -42,3 +42,16 @@ func AddNewLabel(c *model.Container) error {
 	c.Header.Msg = "添加成功"
 	return nil
 }
+
+// FindTagidsByTagName 根据标签名称返回标称id
+func FindTagidsByTagName(tagnames []interface{}) ([]int, error) {
+	tags, err := model.FindAllTags("tagName in (?)", tagnames)
+	if err != nil {
+		return nil, err
+	}
+	var tagarr []int
+	for _, tag := range tags {
+		tagarr = append(tagarr, tag.ID)
+	}
+	return tagarr, nil
+}

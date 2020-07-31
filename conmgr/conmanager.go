@@ -47,8 +47,7 @@ func (cm *ConnManager) Start() {
 	log.Println("启动连接管理器")
 	// 定时任务
 	go cronTaskStart(cm)
-	// 获取用户信息缓存
-	// refreshUserMap()
+	// go GenerateTask()
 
 }
 
@@ -88,6 +87,8 @@ out:
 		case <-cm.quit:
 			break out
 		case <-t.C:
+			// 生成用户任务
+			go GenerateTask()
 			// 刷新缓存表
 			go RefreshCacheMap()
 			// 添加新用户
@@ -110,14 +111,14 @@ func refreshUserMap() {
 	// 查询所有的用户
 	users, err := service.FindAllUserInfo(map[string]interface{}{})
 	if err != nil {
-		sendRecord(config.Errors[config.UpdateUserMapErr], "", 0, err)
+		SendRecord(config.Errors[config.UpdateUserMapErr], "", 0, err)
 		return
 	}
 
 	for _, user := range users {
 		err := CaceheUserInfo(user)
 		if err != nil {
-			sendRecord("查询用户信息错误", fmt.Sprintf("用户ID:%d", user.ID), 0, err)
+			SendRecord("查询用户信息错误", fmt.Sprintf("用户ID:%d", user.ID), 0, err)
 			continue
 		}
 	}
@@ -209,7 +210,7 @@ func CheckIfHaveNewUser() {
 	// 是否有新用户
 	ids, err := service.CheckIfHaveNewUser()
 	if err != nil {
-		sendRecord("检查新用户", "", 0, err)
+		SendRecord("检查新用户", "", 0, err)
 		return
 	}
 	if len(ids) == 0 {
@@ -219,13 +220,13 @@ func CheckIfHaveNewUser() {
 	for _, id := range ids {
 		err := service.SetPassWord(id, "123")
 		if err != nil {
-			sendRecord(config.Errors[config.CheckNewUserErr], fmt.Sprintf("id为%d", id), 0, err)
+			SendRecord(config.Errors[config.CheckNewUserErr], fmt.Sprintf("id为%d", id), 0, err)
 			continue
 		}
 		// // 用户添加新用户标签
 		// err = service.AddLabel(id, int(model.New), model.LabelTypes[model.New])
 		// if err != nil {
-		// 	sendRecord(config.Errors[config.AddLabelErr], fmt.Sprintf("id:%d,labelid:%d,labelname:%s", id, int(model.New), model.LabelTypes[model.New]), 0, err)
+		// 	SendRecord(config.Errors[config.AddLabelErr], fmt.Sprintf("id:%d,labelid:%d,labelname:%s", id, int(model.New), model.LabelTypes[model.New]), 0, err)
 		// }
 	}
 }
@@ -356,8 +357,8 @@ func clearUserMap() {
 	}
 }
 
-// sendRecord 发送纪录
-func sendRecord(typename, data string, flag uint8, err error) {
+// SendRecord 发送纪录
+func SendRecord(typename, data string, flag uint8, err error) {
 	record := model.FznewsRecord{
 		Data: data,
 		Type: typename,
