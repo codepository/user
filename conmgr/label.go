@@ -1,9 +1,43 @@
 package conmgr
 
 import (
+	"errors"
+	"fmt"
+	"strings"
+
 	"github.com/codepository/user/model"
 	"github.com/codepository/user/service"
+	"github.com/mumushuiding/util"
 )
+
+// FindUserLabel 查询用户标签
+func FindUserLabel(c *model.Container) error {
+	errstr := `参数格式:{"body":{"params":{"userid":3,"labeltype":"考核组"}} labeltype是用户标签类别`
+	if len(c.Body.Params) == 0 {
+		return errors.New(errstr)
+	}
+	userid, err := util.Interface2Int(c.Body.Params["userid"])
+	if err != nil {
+		return err
+	}
+	var querybuffer strings.Builder
+	if userid != 0 {
+		querybuffer.WriteString(fmt.Sprintf(" and id in (select tagId from weixin_oauser_taguser where uId=%d)", userid))
+	}
+	labeltype := c.Body.Params["labeltype"]
+	if labeltype != nil && len(labeltype.(string)) > 0 {
+		querybuffer.WriteString(" and type='" + labeltype.(string) + "'")
+	}
+	if querybuffer.Len() == 0 {
+		return errors.New(errstr)
+	}
+	datas, err := model.FindAllTags(querybuffer.String()[5:])
+	if err != nil {
+		return fmt.Errorf("查询标签错误:%s", err.Error())
+	}
+	c.Body.Data = append(c.Body.Data, datas)
+	return nil
+}
 
 // AddNewLabel 添加标签
 func AddNewLabel(c *model.Container) error {

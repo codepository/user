@@ -7,6 +7,12 @@ type labelStatus int
 // LabelTable LabelTable
 var LabelTable = "weixin_oauser_tag"
 
+// DepartmentLeader DepartmentLeader
+var DepartmentLeader = "部门领导"
+
+// LeadersInCharge LeadersInCharge
+var LeadersInCharge = "分管领导"
+
 // WeixinOauserTag 标签
 type WeixinOauserTag struct {
 	ID       int    `gorm:"primary_key" json:"id,omitempty"`

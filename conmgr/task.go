@@ -105,6 +105,35 @@ func FindTaskRoles(c *model.Container) error {
 	return nil
 }
 
+// CompleteTask 完成任务
+func CompleteTask(c *model.Container) error {
+	// 参数检查
+	if c.Body.Data == nil || len(c.Body.Data) == 0 {
+		return errors.New(`完成任务参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01","userid": 1}]}},task为任务,start为任务开始日期`)
+	}
+	// log.Println("data[0]:", c.Body.Data[0])
+	par, ok := c.Body.Data[0].(map[string]interface{})
+	// log.Println("par:", par)
+	if !ok {
+		return errors.New(`完成任务参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01","userid": 1}]}},task为任务,start为任务开始日期`)
+	}
+	if len(par) == 0 {
+		return errors.New(`完成任务参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01","userid": 1}]}},task为任务,start为任务开始日期`)
+	}
+	if par["task"] == nil || par["start"] == nil || par["userid"] == nil {
+		return fmt.Errorf("完成任务参数：task 、 start 和 userid 都不能为空")
+	}
+	id, err := util.Interface2Int(par["userid"])
+	if err != nil {
+		return fmt.Errorf("完成任务报错:%s", err.Error())
+	}
+	err = model.CompleteTask(par["task"].(string), par["start"].(string), id)
+	if err != nil {
+		return fmt.Errorf("完成任务报错:%s", err.Error())
+	}
+	return nil
+}
+
 // TaskUncomplete 未完成任务的用户
 func TaskUncomplete(c *model.Container) error {
 	// 参数检查
@@ -132,6 +161,20 @@ func TaskUncomplete(c *model.Container) error {
 	}
 	c.Body.Data = c.Body.Data[:0]
 	c.Body.Data = append(c.Body.Data, users)
+	// 显示名、紧急程度
+	x := []string{"月度考核未交清单"}
+	now := time.Now()
+	day := now.Day()
+	if day > 15 {
+		x = append(x, "dead")
+	} else if day > 10 {
+		x = append(x, "danger")
+	} else if day > 8 {
+		x = append(x, "warn")
+	} else {
+		x = append(x, "normal")
+	}
+	c.Body.Data = append(c.Body.Data, x)
 	return nil
 }
 

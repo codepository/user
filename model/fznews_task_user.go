@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/mumushuiding/util"
 )
@@ -47,15 +48,20 @@ func FindTaskCompleteRate(query interface{}, values ...interface{}) (float64, er
 	var complete int
 	err := db.Table(FznewsTaskUserTableName).Where(query, values...).Count(&total).Where("complete=?", 1).Count(&complete).Error
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("任务完成率：%s", err.Error())
 	}
 	// err = db.Table(FznewsTaskUserTableName).Where(query, values...).Where("complete=?", 1).Count(&complete).Error
 	// if err != nil {
 	// 	return 0, err
 	// }
 	// log.Printf("总数：%d,完成数:%d", total, complete)
-	r := fmt.Sprintf("%.2f", float64(complete)/float64(total))
-	x, _ := strconv.ParseFloat(r, 64)
+	var x float64
+	if complete == 0 || total == 0 {
+		x = 0.0
+	} else {
+		r := fmt.Sprintf("%.2f", float64(complete)/float64(total)*100)
+		x, _ = strconv.ParseFloat(r, 64)
+	}
 	return x, nil
 }
 
@@ -66,4 +72,10 @@ func FindUsersUnCompleteTask(limit, offset int, query interface{}, values ...int
 		Select("userid,username").
 		Where(query, values).Where("complete=?", 0).Limit(limit).Offset(offset).Find(&datas).Error
 	return datas, err
+}
+
+// CompleteTask CompleteTask
+func CompleteTask(task, start string, userid int) error {
+
+	return db.Table(FznewsTaskUserTableName).Where("task=? and start=? and userid=?", task, start, userid).Updates(map[string]interface{}{"complete": 1, "finish_time": util.FormatDate4(time.Now())}).Error
 }

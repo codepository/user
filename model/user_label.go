@@ -3,8 +3,8 @@ package model
 import (
 	"errors"
 	"fmt"
-	"log"
 
+	"github.com/jinzhu/gorm"
 	"github.com/mumushuiding/util"
 )
 
@@ -52,7 +52,6 @@ func (u *WeixinOauserTaguser) SaveOrUpdate() error {
 
 // DelSingle 删除一个
 func (u *WeixinOauserTaguser) DelSingle() error {
-	log.Println("label:", u.ToString())
 	if u.ID == 0 {
 		if u.UserID == 0 || u.TagID == 0 {
 			return errors.New("label的id不能为空或者uId和tagId都不为空")
@@ -93,4 +92,21 @@ func FindUsersByLabelNames(names []string) ([]*Userinfo, error) {
 	err := wxdb.Raw("select * from weixin_leave_userinfo where id in (select uId from weixin_oauser_taguser where tagId in (select id from weixin_oauser_tag where tagName in (?)))", names).Scan(&result).Error
 
 	return result, err
+}
+
+// IsUserHasLabel 查询用户是否包含某个标签
+func IsUserHasLabel(userID int, tagName string) (bool, error) {
+	var datas []*WeixinOauserTaguser
+	err := wxdb.Table(UserLabelTable+" ut").Select("ut.*").Joins("join "+LabelTable+" t on t.id=ut.tagId and tagName='"+tagName+"'").Where("uId=?", userID).
+		Find(&datas).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return false, err
+	}
+	if err == gorm.ErrRecordNotFound {
+		return false, nil
+	}
+	if len(datas) == 0 {
+		return false, nil
+	}
+	return true, nil
 }

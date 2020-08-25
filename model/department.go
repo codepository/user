@@ -7,6 +7,7 @@ type WxDepartment struct {
 	Model
 	Name     string `json:"name"`
 	Parentid int    `json:"parentid"`
+	Leader   string `json:"leader,omitempty"`
 	Order    int    `json:"order,omitempty"`
 	// 0删除，1有效
 	St int8 `json:"st"`
@@ -17,13 +18,18 @@ type TreeNode struct {
 	ID       int         `json:"id"`
 	Name     string      `json:"name"`
 	Parentid int         `json:"parentid"`
+	Leader   string      `json:"leader,omitempty"`
 	Children []*TreeNode `json:"children"`
 }
 
 // FindAllWxDepartment 查询所有部门
 func FindAllWxDepartment() ([]*WxDepartment, error) {
 	var result []*WxDepartment
-	err := wxdb.Table(wxDepartmentTableName).Where("st=1").Find(&result).Error
+	err := wxdb.Table(wxDepartmentTableName + " d").Select("d.*,group_concat(u.name) as leader").
+		Joins("left join " + FznewsLeadershipTable + " l on l.department_id=d.id").
+		Joins("left join " + UserinfoTabel + " u on u.id=l.user_id").
+		Where("d.st=1").Group("d.id,d.name,d.parentid").
+		Find(&result).Error
 	return result, err
 }
 
@@ -42,6 +48,7 @@ func TransformWxDepartment2Tree(list []*WxDepartment) []*TreeNode {
 	for _, d := range list {
 		all[d.ID] = &TreeNode{
 			ID: d.ID, Parentid: d.Parentid,
+			Leader:   d.Leader,
 			Name:     d.Name,
 			Children: []*TreeNode{}}
 	}

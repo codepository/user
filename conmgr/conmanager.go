@@ -172,7 +172,7 @@ func GetUserinfo(c *model.Container) error {
 
 // FindAllDepartment 查询部门树形结构
 func FindAllDepartment(c *model.Container) error {
-	if Conmgr.cacheMap[departmentInfo] == nil {
+	if c.Body.Refresh || Conmgr.cacheMap[departmentInfo] == nil {
 		result, err := service.FindAllDepartment()
 		if err != nil {
 			return err

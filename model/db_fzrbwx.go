@@ -31,9 +31,13 @@ func setupWxdb() {
 		panic(err)
 	}
 	wxdb.Set("gorm:table_options", "ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;").
-		AutoMigrate(&WeixinOauserTag{})
+		AutoMigrate(&WeixinOauserTag{}).AutoMigrate(&WeixinFlowProcess{}).AutoMigrate(&WeixinFlowLog{}).AutoMigrate(&WeixinFlowApprovaldata{})
 	wxdb.Model(&WeixinOauserTaguser{}).AddUniqueIndex("tagid_uid", "tagId", "uId")
 	wxdb.Model(&WeixinOauserTag{}).AddUniqueIndex("tagName", "tagName")
+	wxdb.Model(&WeixinFlowProcess{}).AddUniqueIndex("processInstanceId", "processInstanceId")
+	wxdb.Model(&WeixinFlowApprovaldata{}).AddUniqueIndex("thirdNo", "thirdNo")
+	wxdb.Model(&WeixinFlowLog{}).Omit("processname")
+	wxdb.Model(&WeixinFlowLog{}).AddForeignKey("thirdNo", "weixin_flow_process(processInstanceId)", "CASCADE", "CASCADE")
 	wxdb.DB().SetMaxIdleConns(idle)
 	open, err := strconv.Atoi(conf.DbMaxOpenConns)
 	if err != nil {

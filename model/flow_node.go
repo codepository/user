@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/mumushuiding/util"
 )
@@ -96,7 +98,7 @@ type ExecutionData struct {
 	// 抄送节点
 	NotifyNodes []*ApprovalNode `json:"NotifyNodes"`
 	// 当前执行步骤,0是第一个审批节点
-	Approverstep int `json:"approverstep"`
+	Approverstep int `json:"Approverstep"`
 }
 
 // ApprovalNodes 审批节点
@@ -124,7 +126,7 @@ type Items struct {
 // Approver 审批人
 type Approver struct {
 	// 审批人
-	ItemName string
+	ItemName string `json:"itemName"`
 	// 部门
 	ItemParty string
 	// 头像
@@ -277,40 +279,12 @@ func (n *Node) execute(userID string, approverid interface{}, isleader float64, 
 		}
 		switch a.Type {
 		case 3:
-			// 查询用户的上级，若是普通员工他的上级即是部门领导，
 			var users []*Userinfo
 			var err error
-			if isleader == 1 {
-				// 若是部门领导他的上级是该部门的分管领导
-				users, err = FindLeaderByUserID(userID, isleader)
-				if err != nil {
-					return nil, err
-				}
-			} else {
-				// 若是普通员工且ActionerRules[0].Level==1则他的上级即是部门领导
-				// 若是普通员工且ActionerRules[0].Level==2，则他的上级则是上级部门领导
-				// 以此类推
-				switch n.Properties.ActionerRules[0].Level {
-				case 1:
-					users, err = FindLeaderByUserID(userID, isleader)
-					if err != nil {
-						return nil, err
-					}
-					break
-				case 2:
-
-					users, err = FindSecondLeaderByDepartmentid(departmentid)
-					if err != nil {
-						return nil, err
-					}
-					break
-				default:
-
-				}
-			}
-
-			if len(users) == 0 {
-				return nil, fmt.Errorf("部门[%d]未设置领导,无法提交", departmentid)
+			// 查询审批领导
+			users, err = FindLeaderByDepartmentID(departmentid, isleader)
+			if err != nil {
+				return nil, err
 			}
 			for _, u := range users {
 				result.Items.Item = append(result.Items.Item, &Approver{
@@ -389,7 +363,7 @@ func (n *Node) check(params map[string]interface{}) (bool, error) {
 			for _, v := range c.ParamValues {
 				// log.Println("v:", reflect.TypeOf(v))
 				// log.Println("key:", reflect.TypeOf(params[c.ParamKey]))
-				log.Printf("匹配条件:v:%vkey:%s,keyval:%v.\n", v, c.ParamKey, params[c.ParamKey])
+				// log.Printf("匹配条件:v:%vkey:%s,keyval:%v.\n", v, c.ParamKey, params[c.ParamKey])
 				vstr, _ := util.ToJSONStr(v)
 				kstr, _ := util.ToJSONStr(params[c.ParamKey])
 
@@ -448,4 +422,167 @@ func (n *Node) GetProcessConfigFromJSONFile() {
 	if err != nil {
 		log.Printf("decode processConfig.json failed:%v", err)
 	}
+}
+
+//   ================================ 执行流 ========================
+
+// ToString ToString
+func (e *ExecutionData) ToString() (string, error) {
+	return util.ToJSONStr(e)
+}
+func (e *ExecutionData) execute(perform int, userid string) error {
+	// str, _ := e.ToString()
+	// log.Println("ExecutionData.execute:", str)
+	if e.OpenSpstatus != 1 {
+		return errors.New("非审批状态无法审批")
+	}
+	if userid != e.ApplyUserID {
+		return errors.New("只允许本人操作")
+	}
+	// 执行流程
+	if perform != 2 {
+		return errors.New("当前步骤只允许通过")
+	}
+	e.OpenSpstatus = perform
+	return nil
+}
+func (a *ApprovalNode) execute(perform int, userid, speech string) error {
+	// NodeStatus是否是处于审批中
+
+	if a.NodeStatus != 1 {
+		return errors.New("已审批,刷新查看详情")
+	}
+	canIPerform := false
+	var us []string
+	for _, item := range a.Items.Item {
+		// 或签且已经有人审批了
+		if item.ItemStatus != 1 && a.NodeAttr == 1 {
+			return errors.New("已审批,刷新查看详情")
+		}
+		if item.ItemUserID == userid {
+			canIPerform = true
+			// 执行流程
+			item.ItemSpeech = speech
+			item.ItemOpTime = time.Now().Nanosecond()
+			if a.NodeAttr == 1 {
+				item.ItemStatus = perform
+				a.NodeStatus = perform
+			} else {
+				return errors.New("暂不支持会签")
+			}
+			break
+		} else {
+			us = append(us, item.ItemName)
+		}
+	}
+	if !canIPerform {
+		if len(us) == 0 {
+			return errors.New("当前步骤没有审批人,请联系管理员")
+		}
+		return errors.New("你没有审批权限,审批人只能是:" + strings.Join(us, ","))
+	}
+	return nil
+}
+
+// complete 通过或驳回
+func (e *ExecutionData) complete(perform int, userid string, speech string) error {
+	if e.Approverstep == 0 {
+		err := e.execute(perform, userid)
+		if err != nil {
+			return err
+		}
+	} else if e.Approverstep > len(e.ApprovalNodes) {
+		return errors.New("流程已经审批结束,无法执行")
+	} else {
+
+		approvalNode := e.ApprovalNodes[e.Approverstep-1]
+		err := approvalNode.execute(perform, userid, speech)
+		if err != nil {
+			return err
+		}
+
+	}
+	switch perform {
+	case 2:
+		e.Approverstep = e.Approverstep + 1
+
+		break
+	case 3:
+		e.Approverstep = e.Approverstep - 1
+		break
+	default:
+		return errors.New("只支持“通过”、“驳回”")
+	}
+
+	if e.Approverstep == 0 {
+		e.OpenSpstatus = 1
+	} else if len(e.ApprovalNodes) >= e.Approverstep {
+		e.ApprovalNodes[e.Approverstep-1].NodeStatus = 1
+		for _, item := range e.ApprovalNodes[e.Approverstep-1].Items.Item {
+			item.ItemStatus = 1
+			item.ItemSpeech = ""
+		}
+
+	}
+	return nil
+}
+
+// withdraw 撤回
+func (e *ExecutionData) withdraw(perform int, userid string, speech string) error {
+	// 当前步骤的前一步是由撤消人审批的情况下才能撤回
+	if e.Approverstep == 0 {
+		return errors.New("处于第一步,无法撤回")
+	}
+	canWithdraw := false
+	if e.Approverstep == 1 {
+		if e.ApplyUserID == userid {
+			canWithdraw = true
+			e.OpenSpstatus = 1
+		}
+	} else if e.Approverstep > len(e.ApprovalNodes) {
+		return errors.New("流程已经结束无法撤消")
+	} else {
+		for _, u := range e.ApprovalNodes[e.Approverstep-2].Items.Item {
+			if u.ItemUserID == userid {
+				canWithdraw = true
+				// 修改上一步骤为正在审批状态
+				e.ApprovalNodes[e.Approverstep-2].NodeStatus = 1
+				u.ItemSpeech = ""
+				u.ItemStatus = 1
+				break
+			}
+		}
+	}
+	if !canWithdraw {
+		return errors.New("只能撤回相邻步骤的流程")
+	}
+	for _, u := range e.ApprovalNodes[e.Approverstep-1].Items.Item {
+		e.ApprovalNodes[e.Approverstep-1].NodeStatus = 0
+		u.ItemStatus = 0
+	}
+	e.Approverstep--
+	return nil
+
+}
+
+// Perform 执行流程
+// perform 值包含2、3、4、5 分别表示:通过、驳回、转审、撤消
+// userid 表示用户
+func (e *ExecutionData) Perform(perform int, userid string, speech string) error {
+
+	// log.Println("开始step=", step)
+	if perform == 2 || perform == 3 { // 通过或驳回
+		err := e.complete(perform, userid, speech)
+		if err != nil {
+			return err
+		}
+	} else if perform == 5 { // 撤消
+		err := e.withdraw(perform, userid, speech)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+
 }

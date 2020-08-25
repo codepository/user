@@ -2,6 +2,9 @@ package model
 
 import "errors"
 
+// FznewsLeadershipTable 分管部门表格名
+var FznewsLeadershipTable = "fznews_leadership"
+
 // FznewsLeadership 设置用户分管的部门
 type FznewsLeadership struct {
 	Model

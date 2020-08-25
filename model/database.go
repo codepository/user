@@ -90,6 +90,11 @@ func GetDB() *gorm.DB {
 func GetTx() *gorm.DB {
 	return db.Begin()
 }
+
+// GetWxTx GetWxTx
+func GetWxTx() *gorm.DB {
+	return wxdb.Begin()
+}
 func updateTimeStampForCreateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
 		nowTime := time.Now()

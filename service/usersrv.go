@@ -130,7 +130,7 @@ func FindAllUserInfo(query interface{}) ([]*model.Userinfo, error) {
 
 // GetUseridsByTagAndLevel GetUseridsByTagAndLevel
 func GetUseridsByTagAndLevel(c *model.Container) error {
-	errstr := `参数格式:{"body":{"data":[{"tags":["第一考核组成员","项目舞台"],"tag_method":"and","level":1}]}}, and表示同时拥有"第一考核组成员","项目舞台"标签的用户`
+	errstr := `参数格式:{"body":{"data":[{"tags":["第一考核组成员","项目舞台"],"levels":[0,1],"methods":["and","or"]}]}}, and表示同时拥有"第一考核组成员","项目舞台"标签的用户`
 	var err error
 	// 参数解析
 	if c.Body.Data == nil || len(c.Body.Data) == 0 {
@@ -143,6 +143,17 @@ func GetUseridsByTagAndLevel(c *model.Container) error {
 	if !ok {
 		return errors.New(errstr)
 	}
+	if par["methods"] == nil {
+		return errors.New("根据标签和职级查询时参数methods不能为空")
+	}
+	temp, ok := par["methods"].([]interface{})
+	if !ok {
+		return errors.New(errstr)
+	}
+	var methods []string
+	for _, m := range temp {
+		methods = append(methods, m.(string))
+	}
 	// 标签判断
 	tags, ok := par["tags"].([]interface{})
 	if !ok {
@@ -153,23 +164,32 @@ func GetUseridsByTagAndLevel(c *model.Container) error {
 	if err != nil {
 		return err
 	}
-	method, ok := par["tag_method"].(string)
-	if !ok {
-		return errors.New(errstr)
-	}
 	fields := "id"
+	c.Body.Data = c.Body.Data[:0]
 	var users []*model.Userinfo
-	if par["level"] != nil {
-		level, err := util.Interface2Int(par["level"])
+	if par["levels"] != nil {
+		var levels []int
+		temp, ok := par["levels"].([]interface{})
+		if !ok {
+			return errors.New(errstr)
+		}
+		for _, l := range temp {
+			level, err := util.Interface2Int(l)
+			if err != nil {
+				return err
+			}
+			levels = append(levels, level)
+		}
+
 		if err != nil {
 			return errors.New(errstr)
 		}
-		users, err = FindUsersByTagidsAndLevel(tagids, level, method, fields)
+		users, err = FindUsersByTagidsAndLevel(tagids, levels, methods, fields)
 		if err != nil {
 			return nil
 		}
 	} else {
-		users, err = FindUsersByTagids(tagids, method, fields)
+		users, err = FindUsersByTagids(tagids, methods[0], fields)
 		if err != nil {
 			return nil
 		}
@@ -178,7 +198,6 @@ func GetUseridsByTagAndLevel(c *model.Container) error {
 	for _, user := range users {
 		userids = append(userids, user.ID)
 	}
-	c.Body.Data = c.Body.Data[:0]
 	c.Body.Data = append(c.Body.Data, userids)
 	return nil
 }
@@ -218,12 +237,20 @@ func FindUsersByTagids(tagids []int, method, fields string) ([]*model.Userinfo, 
 }
 
 // FindUsersByTagidsAndLevel FindUsersByTagidsAndLevel
-func FindUsersByTagidsAndLevel(tagids []int, level int, method, fields string) ([]*model.Userinfo, error) {
+func FindUsersByTagidsAndLevel(tagids []int, levels []int, methods []string, fields string) ([]*model.Userinfo, error) {
 	if len(tagids) == 0 {
 		return nil, errors.New("tagids 不能为空")
 	}
-	sqlbuff := generateSQL(tagids, method, fields)
-	sqlbuff.WriteString(fmt.Sprintf(" and level=%d", level))
+	sqlbuff := generateSQL(tagids, methods[0], fields)
+	if methods[1] == "and" {
+		return nil, errors.New("level只能是or")
+	}
+	var lebuff strings.Builder
+	for _, l := range levels {
+		lebuff.WriteString(fmt.Sprintf(",%d", l))
+	}
+	sqlbuff.WriteString(" and level in (" + lebuff.String()[1:] + ")")
+
 	return model.FindAllUserinfoByRawSQL(sqlbuff.String())
 }
 
