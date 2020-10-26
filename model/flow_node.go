@@ -71,7 +71,8 @@ type ActionerRule struct {
 	// 用户ID
 	UserID string `json:"user_id"`
 	Labels int    `json:"labels,omitempty"`
-	Level  int8   `json:"level,omitempty"`
+	// 与部门的level相对应
+	Level int8 `json:"level,omitempty"`
 }
 
 // ExecutionData 执行流数据
@@ -279,18 +280,24 @@ func (n *Node) execute(userID string, approverid interface{}, isleader float64, 
 		}
 		switch a.Type {
 		case 3:
-			var users []*Userinfo
 			var err error
 			// 查询审批领导
-			users, err = FindLeaderByDepartmentID(departmentid, isleader)
+			var role = 5
+			if isleader == 1 {
+				role = 6
+			}
+			leaders, err := FindLeadershipByDepartmentIDAndRole(departmentid, role, int(a.Level))
 			if err != nil {
 				return nil, err
 			}
-			for _, u := range users {
+			if len(leaders) == 0 {
+				return nil, fmt.Errorf("部门【%d】的部门领导暂无,无法提交流程,请联系管理员", departmentid)
+			}
+			for _, u := range leaders {
 				result.Items.Item = append(result.Items.Item, &Approver{
 					ItemImage:  u.Avatar,
-					ItemParty:  u.Departmentname,
-					ItemName:   u.Name,
+					ItemParty:  u.DepartmentName,
+					ItemName:   u.Username,
 					ItemUserID: u.Userid,
 				})
 
@@ -569,20 +576,29 @@ func (e *ExecutionData) withdraw(perform int, userid string, speech string) erro
 // perform 值包含2、3、4、5 分别表示:通过、驳回、转审、撤消
 // userid 表示用户
 func (e *ExecutionData) Perform(perform int, userid string, speech string) error {
-
-	// log.Println("开始step=", step)
-	if perform == 2 || perform == 3 { // 通过或驳回
+	switch perform {
+	case 2:
+		log.Println("通过")
 		err := e.complete(perform, userid, speech)
 		if err != nil {
 			return err
 		}
-	} else if perform == 5 { // 撤消
+		break
+	case 3:
+		log.Println("驳回")
+		err := e.complete(perform, userid, speech)
+		if err != nil {
+			return err
+		}
+		break
+	case 5: // 撤消
 		err := e.withdraw(perform, userid, speech)
 		if err != nil {
 			return err
 		}
+		break
+	default:
+		return errors.New("perform 值包含2、3、5 分别表示:通过、驳回、撤消")
 	}
-
 	return nil
-
 }

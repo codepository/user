@@ -133,14 +133,11 @@ func GetUseridsByTagAndLevel(c *model.Container) error {
 	errstr := `参数格式:{"body":{"data":[{"tags":["第一考核组成员","项目舞台"],"levels":[0,1],"methods":["and","or"]}]}}, and表示同时拥有"第一考核组成员","项目舞台"标签的用户`
 	var err error
 	// 参数解析
-	if c.Body.Data == nil || len(c.Body.Data) == 0 {
+	if len(c.Body.Params) == 0 {
 		return errors.New(errstr)
 	}
-	par, ok := c.Body.Data[0].(map[string]interface{})
+	par := c.Body.Params
 	if len(par) == 0 {
-		return errors.New(errstr)
-	}
-	if !ok {
 		return errors.New(errstr)
 	}
 	if par["methods"] == nil {

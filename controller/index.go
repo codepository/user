@@ -18,6 +18,11 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(writer, "Hello world!")
 }
 
+// Alive 程序是否存活
+func Alive(writer http.ResponseWriter, request *http.Request) {
+	fmt.Fprintf(writer, "1")
+}
+
 // GetToken 获取token
 func GetToken(request *http.Request) (string, error) {
 	token := request.Header.Get("Authorization")

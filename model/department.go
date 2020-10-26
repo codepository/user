@@ -1,5 +1,11 @@
 package model
 
+import (
+	"errors"
+
+	"github.com/jinzhu/gorm"
+)
+
 var wxDepartmentTableName = "weixin_leave_department"
 
 // WxDepartment 微信部门
@@ -9,27 +15,122 @@ type WxDepartment struct {
 	Parentid int    `json:"parentid"`
 	Leader   string `json:"leader,omitempty"`
 	Order    int    `json:"order,omitempty"`
+	// 部门层级
+	Level int `json:"level,omitempty"`
 	// 0删除，1有效
 	St int8 `json:"st"`
 }
 
 // TreeNode 树形节点
 type TreeNode struct {
-	ID       int         `json:"id"`
-	Name     string      `json:"name"`
-	Parentid int         `json:"parentid"`
-	Leader   string      `json:"leader,omitempty"`
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	Parentid   int    `json:"parentid"`
+	Leader     string `json:"leader,omitempty"`
+	LeaderType string `json:"leader_type,omitempty"`
+	// 部门层级
+	Level    int         `json:"level,omitempty"`
 	Children []*TreeNode `json:"children"`
 }
 
-// FindAllWxDepartment 查询所有部门
+// FindAllDepartment 查询所有部门
+func FindAllDepartment(query interface{}, values ...interface{}) ([]*WxDepartment, error) {
+	var result []*WxDepartment
+	err := wxdb.Table(wxDepartmentTableName+" d").Select("d.*").
+		Where("d.st=1").Where(query, values...).
+		Find(&result).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindDepartmentByID FindDepartmentByID
+func FindDepartmentByID(id int) (*WxDepartment, error) {
+	depts, err := FindAllDepartment("id=?", id)
+	if err != nil {
+		return nil, err
+	}
+	if len(depts) == 0 {
+		return nil, errors.New("部门不存在")
+	}
+	return depts[0], nil
+}
+
+// SetDepartmentLevelByID 根据部门ID设置部门level，并返回level值
+func SetDepartmentLevelByID(id int) (int, error) {
+	var err error
+	dept, err := FindDepartmentByID(id)
+	if err != nil {
+		return 0, err
+	}
+	level := dept.Level
+	if level != 0 {
+		return level, nil
+	}
+	var parent = dept
+	// 迭代找父节点
+	for {
+		// 如果父节点为0，则结束
+		if parent.Parentid == 0 {
+			break
+		}
+		if parent.Level != 0 {
+			level = level + parent.Level
+			break
+		} else {
+			level++
+		}
+		// 查询下一个父节点
+		parent, err = FindDepartmentByID(parent.Parentid)
+		if err != nil {
+			return 0, err
+		}
+	}
+	// 更新部门level
+	dept.Level = level
+	err = dept.UpdateLevel()
+	if err != nil {
+		return 0, err
+	}
+	return level, nil
+
+}
+
+// UpdateLevel 更新部门层级
+func (d *WxDepartment) UpdateLevel() error {
+	return wxdb.Table(wxDepartmentTableName).Model(d).UpdateColumn("level", d.Level).Error
+}
+
+// FindAllWxDepartment 查询所有部门和部门领导
 func FindAllWxDepartment() ([]*WxDepartment, error) {
 	var result []*WxDepartment
-	err := wxdb.Table(wxDepartmentTableName + " d").Select("d.*,group_concat(u.name) as leader").
-		Joins("left join " + FznewsLeadershipTable + " l on l.department_id=d.id").
-		Joins("left join " + UserinfoTabel + " u on u.id=l.user_id").
-		Where("d.st=1").Group("d.id,d.name,d.parentid").
+	err := wxdb.Table(wxDepartmentTableName + " d").Select("d.*").
+		Where("d.st=1").
 		Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	// 查询fznews_leadership
+	leaders, err := FindFznewsLeadership("")
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	if len(leaders) > 0 {
+		lmap := make(map[int]string)
+		for _, l := range leaders {
+			if len(lmap[l.DepartmentID]) == 0 {
+				lmap[l.DepartmentID] = l.Leader
+			} else {
+				lmap[l.DepartmentID] = lmap[l.DepartmentID] + "," + l.Leader
+			}
+
+		}
+		for _, r := range result {
+			r.Leader = lmap[r.ID]
+		}
+	}
+
 	return result, err
 }
 
@@ -50,6 +151,7 @@ func TransformWxDepartment2Tree(list []*WxDepartment) []*TreeNode {
 			ID: d.ID, Parentid: d.Parentid,
 			Leader:   d.Leader,
 			Name:     d.Name,
+			Level:    d.Level,
 			Children: []*TreeNode{}}
 	}
 	for {

@@ -57,6 +57,7 @@ func setupDB() {
 		panic(err)
 	}
 	db.DB().SetMaxIdleConns(idle)
+	db.DB().SetConnMaxLifetime(time.Hour * 2)
 	open, err := strconv.Atoi(conf.DbMaxOpenConns)
 	if err != nil {
 		panic(err)
@@ -70,7 +71,7 @@ func setupDB() {
 		AutoMigrate(&UserOrg{}).AutoMigrate(&FznewsTask{}).AutoMigrate(&FznewsTaskUser{})
 	db.Model(&FznewsLogin{}).AddUniqueIndex("user_id", "user_id")
 	db.Model(&FznewsLeadership{}).Omit("department_name")
-	db.Model(&FznewsLeadership{}).AddUniqueIndex("user_department", "user_id", "department_id")
+	db.Model(&FznewsLeadership{}).AddUniqueIndex("userid_departmentid_role", "userid", "department_id", "role")
 	db.Model(&UserOrg{}).AddUniqueIndex("userid_orgid", "userid", "orgid")
 	db.Model(&FznewsTask{}).AddUniqueIndex("name", "name")
 	db.Model(&FznewsTaskUser{}).AddUniqueIndex("userid_task_start", "userid", "task", "start")

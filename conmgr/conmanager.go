@@ -13,12 +13,14 @@ import (
 	"github.com/codepository/user/config"
 	"github.com/codepository/user/model"
 	"github.com/codepository/user/service"
+	"github.com/jinzhu/gorm"
 )
 
 const (
 	departmentInfo  = "部门信息缓存"
 	labelsCache     = "标签缓存"
 	leadershipCache = "分管部门缓存"
+	userinfoCache   = "用户信息缓存"
 )
 
 // Conmgr 程序唯一的一个连接管理器
@@ -173,14 +175,69 @@ func GetUserinfo(c *model.Container) error {
 // FindAllDepartment 查询部门树形结构
 func FindAllDepartment(c *model.Container) error {
 	if c.Body.Refresh || Conmgr.cacheMap[departmentInfo] == nil {
-		result, err := service.FindAllDepartment()
+		d, err := model.FindAllWxDepartment()
+		if err != nil {
+			return err
+		}
+		result := model.TransformWxDepartment2Tree(d)
 		if err != nil {
 			return err
 		}
 		Conmgr.cacheMap[departmentInfo] = result
+		for _, dept := range d {
+			cacheDepartment(dept)
+		}
 	}
 	c.Body.Data = append(c.Body.Data, Conmgr.cacheMap[departmentInfo])
 	return nil
+}
+
+// cacheUserinfoByWxUserid 根据用户微信帐号缓存用户信息
+func cacheUserinfoByWxUserid(userinfo *model.Userinfo) {
+	Conmgr.cacheMap[fmt.Sprintf("%s%s", userinfoCache, userinfo.Userid)] = userinfo
+}
+
+// GetUserinfoFromCacheByWxUserid 根据用户微信帐号获取用户信息
+func GetUserinfoFromCacheByWxUserid(userid string) (*model.Userinfo, error) {
+	userinfo := Conmgr.cacheMap[fmt.Sprintf("%s%s", userinfoCache, userid)]
+	if userinfo == nil {
+		users, err := model.FindAllUserInfo("userid=?", userid)
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		if len(users) > 0 {
+			userinfo = users[0]
+		}
+	}
+	if userinfo != nil {
+		cacheUserinfoByWxUserid(userinfo.(*model.Userinfo))
+		return userinfo.(*model.Userinfo), nil
+	}
+	return nil, nil
+}
+
+// cacheDepartment 缓存部门信息
+func cacheDepartment(dept *model.WxDepartment) {
+	Conmgr.cacheMap[fmt.Sprintf("%s%d", departmentInfo, dept.ID)] = dept
+}
+
+// GetDepartmentFromCache 从缓存获取
+func GetDepartmentFromCache(departmentID int) (*model.WxDepartment, error) {
+	dept := Conmgr.cacheMap[fmt.Sprintf("%s%d", departmentInfo, departmentID)]
+	if dept == nil {
+		departments, err := model.FindAllDepartment("id=?", departmentID)
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		if len(departments) > 0 {
+			dept = departments[0]
+		}
+	}
+	if dept != nil {
+		cacheDepartment(dept.(*model.WxDepartment))
+		return dept.(*model.WxDepartment), nil
+	}
+	return nil, nil
 }
 
 // GetUserByID 根据用户ID从缓存中查询用户信息

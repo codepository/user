@@ -46,8 +46,11 @@ func (u *WeixinOauserTaguser) ToString() string {
 
 // SaveOrUpdate 保存或更新
 func (u *WeixinOauserTaguser) SaveOrUpdate() error {
-
-	return wxdb.Where(WeixinOauserTaguser{UserID: u.UserID, TagID: u.TagID}).Assign(u).Omit("tagName").FirstOrCreate(u).Error
+	err := wxdb.Where(WeixinOauserTaguser{UserID: u.UserID, TagID: u.TagID}).Assign(u).Omit("tagName").FirstOrCreate(u).Error
+	if err != nil {
+		return fmt.Errorf("保存用户标签失败：%s", err.Error())
+	}
+	return nil
 }
 
 // DelSingle 删除一个
@@ -100,7 +103,7 @@ func IsUserHasLabel(userID int, tagName string) (bool, error) {
 	err := wxdb.Table(UserLabelTable+" ut").Select("ut.*").Joins("join "+LabelTable+" t on t.id=ut.tagId and tagName='"+tagName+"'").Where("uId=?", userID).
 		Find(&datas).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return false, err
+		return false, fmt.Errorf("用户是否存在标签【%s】:%s", tagName, err.Error())
 	}
 	if err == gorm.ErrRecordNotFound {
 		return false, nil
@@ -109,4 +112,20 @@ func IsUserHasLabel(userID int, tagName string) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+// AddUserLabelByLabelName 根据标签名为用户添加标签
+func AddUserLabelByLabelName(userID int, tagName string) error {
+	var tu WeixinOauserTaguser
+	tags, err := FindAllTags("tagName=?", tagName)
+	if err != nil {
+		return fmt.Errorf("查询标签【%s】失败:%s", tagName, err.Error())
+	}
+	if len(tags) == 0 {
+		return fmt.Errorf("不存在标签【%s】", tagName)
+	}
+	tu.TagID = tags[0].ID
+	tu.TagName = tags[0].TagName
+	tu.UserID = userID
+	return tu.SaveOrUpdate()
 }

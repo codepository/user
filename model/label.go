@@ -1,6 +1,10 @@
 package model
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/jinzhu/gorm"
+)
 
 type labelStatus int
 
@@ -63,4 +67,16 @@ func FindAllTags(query interface{}, values ...interface{}) ([]*WeixinOauserTag, 
 	var datas []*WeixinOauserTag
 	err := wxdb.Where(query, values...).Find(&datas).Error
 	return datas, err
+}
+
+// FindAllUserTags 查询某个用户所有的标签
+func FindAllUserTags(userID int, query interface{}, values ...interface{}) ([]*WeixinOauserTag, error) {
+	var datas []*WeixinOauserTag
+	err := wxdb.Table(LabelTable+" t").Select("t.*").
+		Joins("join "+UserLabelTable+" tu on uId=? and t.id=tu.tagId", userID).
+		Where(query, values...).Find(&datas).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return datas, nil
 }

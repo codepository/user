@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/jinzhu/gorm"
 	"github.com/mumushuiding/util"
@@ -70,6 +71,7 @@ func (w *WeixinFlowApprovaldata) UpdateDataTX(tx *gorm.DB, e *ExecutionData) err
 		Errcode: 0,
 	}
 	data, err := util.ToJSONStr(ad)
+	print(data)
 	if err != nil {
 		return err
 	}
@@ -81,6 +83,9 @@ func (w *WeixinFlowApprovaldata) UpdateDataTX(tx *gorm.DB, e *ExecutionData) err
 func FindWeixinFlowApprovaldata(thirdNo string) (*WeixinFlowApprovaldata, error) {
 	var data WeixinFlowApprovaldata
 	err := wxdb.Where("thirdNo=?", thirdNo).Find(&data).Error
+	if err != nil {
+		err = fmt.Errorf("查询流程【%s】的直行流:%v", thirdNo, err)
+	}
 	return &data, err
 }
 

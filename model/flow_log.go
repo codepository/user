@@ -34,7 +34,7 @@ func FindAllFlowLogPaged(limit, offset int, query interface{}, values ...interfa
 	if limit == 0 {
 		limit = 20
 	}
-	err := wxdb.Table(WeixinFlowLogTable).Select(WeixinFlowLogTable+".*,"+WeixinFlowProcessTable+".title as processname").Joins("join "+WeixinFlowProcessTable+" on processInstanceId=thirdNo").
+	err := wxdb.Table(WeixinFlowLogTable).Select(WeixinFlowLogTable+".*,"+FznewsFlowProcessTable+".title as processname").Joins("join "+FznewsFlowProcessTable+" on processInstanceId=thirdNo").
 		Where(query, values...).Count(&total).Order("opTime desc").Limit(limit).Offset(offset).
 		Find(&datas).Error
 	if err != nil {

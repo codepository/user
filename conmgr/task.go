@@ -108,15 +108,11 @@ func FindTaskRoles(c *model.Container) error {
 // CompleteTask 完成任务
 func CompleteTask(c *model.Container) error {
 	// 参数检查
-	if c.Body.Data == nil || len(c.Body.Data) == 0 {
+	if len(c.Body.Params) == 0 {
 		return errors.New(`完成任务参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01","userid": 1}]}},task为任务,start为任务开始日期`)
 	}
 	// log.Println("data[0]:", c.Body.Data[0])
-	par, ok := c.Body.Data[0].(map[string]interface{})
-	// log.Println("par:", par)
-	if !ok {
-		return errors.New(`完成任务参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01","userid": 1}]}},task为任务,start为任务开始日期`)
-	}
+	par := c.Body.Params
 	if len(par) == 0 {
 		return errors.New(`完成任务参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01","userid": 1}]}},task为任务,start为任务开始日期`)
 	}
@@ -137,15 +133,11 @@ func CompleteTask(c *model.Container) error {
 // TaskUncomplete 未完成任务的用户
 func TaskUncomplete(c *model.Container) error {
 	// 参数检查
-	if c.Body.Data == nil || len(c.Body.Data) == 0 {
+	if len(c.Body.Params) == 0 {
 		return errors.New(`查询任务完成情况参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01"}]}},task为任务,start为任务开始日期`)
 	}
 	// log.Println("data[0]:", c.Body.Data[0])
-	par, ok := c.Body.Data[0].(map[string]interface{})
-	// log.Println("par:", par)
-	if !ok {
-		return errors.New(`查询任务完成情况参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01"}]}},task为任务,start为任务开始日期`)
-	}
+	par := c.Body.Params
 	if len(par) == 0 {
 		return errors.New(`查询任务完成情况参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01"}]}},task为任务,start为任务开始日期`)
 	}
@@ -181,15 +173,11 @@ func TaskUncomplete(c *model.Container) error {
 // TaskCompleteRate 任务完成情况
 func TaskCompleteRate(c *model.Container) error {
 	// 参数检查
-	if c.Body.Data == nil || len(c.Body.Data) == 0 {
+	if len(c.Body.Params) == 0 {
 		return errors.New(`查询任务完成情况参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01"}]}},task为任务,start为任务开始日期`)
 	}
 	// log.Println("data[0]:", c.Body.Data[0])
-	par, ok := c.Body.Data[0].(map[string]interface{})
-	// log.Println("par:", par)
-	if !ok {
-		return errors.New(`查询任务完成情况参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01"}]}},task为任务,start为任务开始日期`)
-	}
+	par := c.Body.Params
 	if len(par) == 0 {
 		return errors.New(`查询任务完成情况参数格式:{"body":{"data":[{"task":"一线考核","start":"2020-06-01"}]}},task为任务,start为任务开始日期`)
 	}

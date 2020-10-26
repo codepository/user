@@ -31,5 +31,6 @@ func setMux() {
 	Mux.HandleFunc("/api/v1/user/login", interceptor(controller.Login))
 	Mux.HandleFunc("/api/v1/user/logout", interceptor(controller.Logout))
 	Mux.HandleFunc("/api/v1/user/checknew", interceptor(controller.CheckNewUser))
+	Mux.HandleFunc("/api/v1/user/alive", interceptor(controller.Alive))
 	Mux.HandleFunc("/user/permission/hasPermission", interceptor(controller.HasPermission))
 }

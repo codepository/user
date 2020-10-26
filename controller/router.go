@@ -64,6 +64,7 @@ func SetRouters() {
 		{route: "exec/flow/startByToken", handler: conmgr.StartFlowByToken, meta: &RouteMeta{
 			authority: []string{"%考核组成员"},
 		}},
+		{route: "exec/flow/delete", handler: conmgr.DeleteFlow},
 		// 审批流程
 		{route: "exec/flow/completeFlowTask", handler: conmgr.CompleteFlowTask},
 		// 待审批流程查询
@@ -72,11 +73,16 @@ func SetRouters() {
 		{route: "visit/flow/log", handler: conmgr.FindFlowLog},
 		// 流程查询
 		{route: "visit/flow/myprocess", handler: conmgr.FindFlowMyProcess},
-
+		// 查询所有流程
+		{route: "visit/flow/findall", handler: conmgr.FindAllFlow},
+		// 查看流程是否已经存在
+		{route: "visit/flow/exist", handler: conmgr.FlowExist},
+		// 查看流程进度
+		{route: "visit/flow/flowStepper", handler: conmgr.FlowStepper},
 		//=============== 分管领导管理===================
 		{route: "exec/leader/add", handler: conmgr.AddLeadership, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 		{route: "exec/leader/delbyid", handler: conmgr.DelByIDLeadership, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
-		{route: "exec/leader/find", handler: conmgr.FindLeadership},
+		{route: "visit/leader/find", handler: conmgr.FindLeadership},
 		// ===============行业查询权限管理================
 		{route: "visit/org/findOrgidsByUserid", handler: conmgr.FindOrgidsByUserid},
 		{route: "visit/org/findUserByOrgid", handler: conmgr.FindUserByOrgid},
@@ -92,6 +98,8 @@ func SetRouters() {
 		// ====================== 部门 ==========================
 		// 查询部门：{"body":{"refresh":false,"paged":true,"method":"visit/department/all"}}
 		{route: "visit/department/all", handler: conmgr.FindAllDepartment},
+		// 同步weixin_leave_leaderrole中分管领导信息，从weixin_leave_userinfo同步部门领导信息
+		{route: "exec/department/sync", handler: conmgr.SyncLeader},
 	}
 }
 
