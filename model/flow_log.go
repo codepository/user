@@ -13,7 +13,7 @@ type WeixinFlowLog struct {
 	Username string `json:"username,omitempty"`
 	Status   int    `json:"status"`
 	Speech   string `json:"speech,omitempty"`
-	OpTime   int    `gorm:"column:opTime" json:"opTime,omitempty"`
+	OpTime   int64  `gorm:"column:opTime" json:"opTime,omitempty"`
 }
 
 // WeixinFlowLogResults WeixinFlowLogResults

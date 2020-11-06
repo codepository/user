@@ -3,8 +3,6 @@ package conmgr
 import (
 	"errors"
 	"fmt"
-	"log"
-	"reflect"
 
 	"strings"
 	"time"
@@ -111,7 +109,6 @@ func StartFlowByToken(c *model.Container) error {
 		Step:       0,
 		Status:     1,
 		NotifyAttr: 1,
-		Createtime: time.Now().Nanosecond(),
 	}
 	// 更新数据库
 	tx := model.GetWxTx()
@@ -219,7 +216,7 @@ func FindFlowLog(c *model.Container) error {
 	if sqlbuffer.Len() != 0 {
 		logs, total, err = model.FindAllFlowLogPaged(c.Body.MaxResults, c.Body.StartIndex, sqlbuffer.String()[5:])
 	} else {
-		logs, total, err = model.FindAllFlowLogPaged(c.Body.MaxResults, c.Body.StartIndex, "")
+		return errors.New(`参数格式:{"body":{"start_index":1,"max_results":15,"params":{"thirdNo":"fdfdf","userId":"linting","username":"张三"}}}参数不能全为空`)
 	}
 	if err != nil {
 		return err
@@ -349,7 +346,7 @@ func CompleteFlowTask(c *model.Container) error {
 		Status:   perform,
 		UserID:   user.Userid,
 		Username: user.Name,
-		OpTime:   time.Now().Nanosecond(),
+		OpTime:   time.Now().Unix(),
 		Speech:   speech,
 	}
 	err = log.InsertTX(tx)
@@ -362,6 +359,8 @@ func CompleteFlowTask(c *model.Container) error {
 	c.Body.Data = c.Body.Data[:0]
 	// 添加流程数据
 	c.Body.Data = append(c.Body.Data, p)
+	// 添加流程纪录
+	c.Body.Data = append(c.Body.Data, log)
 	return nil
 }
 
@@ -415,7 +414,7 @@ func FlowStepper(c *model.Container) error {
 // FindAllFlow 查询所有流程
 func FindAllFlow(c *model.Container) error {
 
-	errstr := `参数格式: {"body":{"params":{"userId":"wanyu","uid":33,"titleLike":"","title":"sss", 
+	errstr := `参数格式: {"body":{"params":{"processInstanceId":"xxxxx","userId":"wanyu","uid":33,"titleLike":"","title":"sss", 
 	"businessType":"dxxx","deptName":"","candidate":"linting","username":"张三","completed":0,"posts":[0,1]}}}
 	userId 流程申请人对应的微信号, uid 申请人的ID, title 流程名,titleLike 流程名近似查询, businessType 流程类型
 	deptName 部门名称, candidate 审批人对应微信号, username 申请人姓名, posts对应申请人的职级：0是一般工作人员， 
@@ -425,6 +424,9 @@ func FindAllFlow(c *model.Container) error {
 		return fmt.Errorf(errstr)
 	}
 	var buff strings.Builder
+	if !util.InterfaceIsEmpty(c.Body.Params["processInstanceId"]) {
+		buff.WriteString(fmt.Sprintf(" and processInstanceId='%v'", c.Body.Params["processInstanceId"]))
+	}
 	if !util.InterfaceIsEmpty(c.Body.Params["userId"]) {
 		buff.WriteString(fmt.Sprintf(" and userId='%v'", c.Body.Params["userId"]))
 	}
@@ -451,6 +453,7 @@ func FindAllFlow(c *model.Container) error {
 		}
 		var deptBuffer strings.Builder
 		for _, d := range strings.Split(dept, ",") {
+
 			deptBuffer.WriteString(fmt.Sprintf(",'%s'", d))
 		}
 		buff.WriteString(fmt.Sprintf(" and deptName in (%v)", deptBuffer.String()[1:]))
@@ -473,7 +476,6 @@ func FindAllFlow(c *model.Container) error {
 		buff.WriteString(fmt.Sprintf(" and completed=%d", c))
 	}
 	if c.Body.Params["posts"] != nil {
-		log.Println(reflect.TypeOf(c.Body.Params["posts"]))
 		levels, ok := c.Body.Params["posts"].([]interface{})
 		if !ok {
 			return fmt.Errorf("posts 格式 [0,1,2] 0是一般工作人员,1中层正职（含主持工作的副职）, 2是中层副职, 3是社领导")

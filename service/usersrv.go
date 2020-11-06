@@ -337,7 +337,7 @@ func FindUsersByLabelIDs(c *model.Container) error {
 
 // FindAllDepartment 查询所有部门
 func FindAllDepartment() ([]*model.TreeNode, error) {
-	d, err := model.FindAllWxDepartment()
+	d, err := model.FindAllWeixinLeaveDepartment()
 	if err != nil {
 		return nil, err
 	}

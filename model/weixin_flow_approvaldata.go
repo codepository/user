@@ -22,11 +22,10 @@ type WeixinFlowApprovaldata struct {
 	Data string `gorm:"type:text" json:"data"`
 	// 当前步骤
 	Step int `json:"step"`
-	// 1-审批中；2-已通过；3-已驳回；4-已取消
+	// 1-审批中；2-已通过；3-已驳回;5-撤消 值包含2、3、4、5 分别表示:通过、驳回、转审、撤消
 	Status int `json:"status"`
 	// 0-提交申请时，1-审批通过时，3-提交和审批者抄送
 	NotifyAttr int `gorm:"column:notifyAttr" json:"notifyAttr"`
-	Createtime int `json:"createtime,omitempty"`
 }
 
 // Approvaldata 审批流数据
@@ -71,7 +70,7 @@ func (w *WeixinFlowApprovaldata) UpdateDataTX(tx *gorm.DB, e *ExecutionData) err
 		Errcode: 0,
 	}
 	data, err := util.ToJSONStr(ad)
-	print(data)
+	// print(data)
 	if err != nil {
 		return err
 	}

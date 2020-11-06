@@ -33,7 +33,8 @@ func setupWxdb() {
 		panic(err)
 	}
 	wxdb.Set("gorm:table_options", "ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;").
-		AutoMigrate(&WeixinOauserTag{}).AutoMigrate(&FznewsFlowProcess{}).AutoMigrate(&WeixinFlowLog{}).AutoMigrate(&WeixinFlowApprovaldata{})
+		AutoMigrate(&WeixinOauserTag{}).AutoMigrate(&FznewsFlowProcess{}).AutoMigrate(&WeixinFlowLog{}).AutoMigrate(&WeixinFlowApprovaldata{}).
+		AutoMigrate(&WeixinLeaveDepartment{})
 	wxdb.Model(&WeixinOauserTaguser{}).AddUniqueIndex("tagid_uid", "tagId", "uId")
 	wxdb.Model(&WeixinOauserTag{}).AddUniqueIndex("tagName", "tagName")
 	wxdb.Model(&FznewsFlowProcess{}).AddUniqueIndex("processInstanceId", "processInstanceId")

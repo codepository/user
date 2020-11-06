@@ -100,6 +100,8 @@ func SetRouters() {
 		{route: "visit/department/all", handler: conmgr.FindAllDepartment},
 		// 同步weixin_leave_leaderrole中分管领导信息，从weixin_leave_userinfo同步部门领导信息
 		{route: "exec/department/sync", handler: conmgr.SyncLeader},
+		// 更新部门信息
+		{route: "exec/department/update", handler: conmgr.UpdateDepartment},
 	}
 }
 

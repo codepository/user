@@ -26,14 +26,6 @@ func goMain() error {
 	defer func() {
 		model.StopDB()
 	}()
-	// 启动redis连接
-	model.SetRedis()
-	defer func() {
-		log.Println("关闭redis连接")
-		if model.RedisOpen {
-			model.RedisCli.Close()
-		}
-	}()
 	// 启动连接管理器
 	conmgr.New()
 	defer func() {

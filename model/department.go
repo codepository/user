@@ -6,11 +6,12 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-var wxDepartmentTableName = "weixin_leave_department"
+// WeixinLeaveDepartmentTableName 部门对应表格名称
+var WeixinLeaveDepartmentTableName = "weixin_leave_department"
 
-// WxDepartment 微信部门
-type WxDepartment struct {
-	Model
+// WeixinLeaveDepartment 微信部门
+type WeixinLeaveDepartment struct {
+	ID       int    `gorm:"primary_key" json:"id,omitempty"`
 	Name     string `json:"name"`
 	Parentid int    `json:"parentid"`
 	Leader   string `json:"leader,omitempty"`
@@ -18,7 +19,8 @@ type WxDepartment struct {
 	// 部门层级
 	Level int `json:"level,omitempty"`
 	// 0删除，1有效
-	St int8 `json:"st"`
+	St        int8 `json:"st"`
+	Attribute int  `json:"attribute"`
 }
 
 // TreeNode 树形节点
@@ -29,14 +31,15 @@ type TreeNode struct {
 	Leader     string `json:"leader,omitempty"`
 	LeaderType string `json:"leader_type,omitempty"`
 	// 部门层级
-	Level    int         `json:"level,omitempty"`
-	Children []*TreeNode `json:"children"`
+	Level     int         `json:"level,omitempty"`
+	Attribute int         `json:"attribute"`
+	Children  []*TreeNode `json:"children"`
 }
 
 // FindAllDepartment 查询所有部门
-func FindAllDepartment(query interface{}, values ...interface{}) ([]*WxDepartment, error) {
-	var result []*WxDepartment
-	err := wxdb.Table(wxDepartmentTableName+" d").Select("d.*").
+func FindAllDepartment(query interface{}, values ...interface{}) ([]*WeixinLeaveDepartment, error) {
+	var result []*WeixinLeaveDepartment
+	err := wxdb.Table(WeixinLeaveDepartmentTableName+" d").Select("d.*").
 		Where("d.st=1").Where(query, values...).
 		Find(&result).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -45,8 +48,14 @@ func FindAllDepartment(query interface{}, values ...interface{}) ([]*WxDepartmen
 	return result, nil
 }
 
+// Updates 更新部门
+// ""，0，false 为空白值不会更新
+func (d *WeixinLeaveDepartment) Updates() error {
+	return wxdb.Table(WeixinLeaveDepartmentTableName).Model(d).Updates(d).Error
+}
+
 // FindDepartmentByID FindDepartmentByID
-func FindDepartmentByID(id int) (*WxDepartment, error) {
+func FindDepartmentByID(id int) (*WeixinLeaveDepartment, error) {
 	depts, err := FindAllDepartment("id=?", id)
 	if err != nil {
 		return nil, err
@@ -98,14 +107,14 @@ func SetDepartmentLevelByID(id int) (int, error) {
 }
 
 // UpdateLevel 更新部门层级
-func (d *WxDepartment) UpdateLevel() error {
-	return wxdb.Table(wxDepartmentTableName).Model(d).UpdateColumn("level", d.Level).Error
+func (d *WeixinLeaveDepartment) UpdateLevel() error {
+	return wxdb.Table(WeixinLeaveDepartmentTableName).Model(d).UpdateColumn("level", d.Level).Error
 }
 
-// FindAllWxDepartment 查询所有部门和部门领导
-func FindAllWxDepartment() ([]*WxDepartment, error) {
-	var result []*WxDepartment
-	err := wxdb.Table(wxDepartmentTableName + " d").Select("d.*").
+// FindAllWeixinLeaveDepartment 查询所有部门和部门领导
+func FindAllWeixinLeaveDepartment() ([]*WeixinLeaveDepartment, error) {
+	var result []*WeixinLeaveDepartment
+	err := wxdb.Table(WeixinLeaveDepartmentTableName + " d").Select("d.*").
 		Where("d.st=1").
 		Find(&result).Error
 	if err != nil {
@@ -139,7 +148,7 @@ func FindAllWxDepartment() ([]*WxDepartment, error) {
 // 2、all依次取出元素，将当前节点的父节点的放入不重复集合 parent[]，剩下的为当前叶节点
 // 3、all依次取出元素，并在parent[]找寻父子点，并并入父节点，最后将parent[]中的元素压入all[]
 // 重复2、3步骤，直到parent[]中只有一个元素
-func TransformWxDepartment2Tree(list []*WxDepartment) []*TreeNode {
+func TransformWxDepartment2Tree(list []*WeixinLeaveDepartment) []*TreeNode {
 	if list == nil || len(list) == 0 {
 		return nil
 	}
@@ -149,10 +158,11 @@ func TransformWxDepartment2Tree(list []*WxDepartment) []*TreeNode {
 	for _, d := range list {
 		all[d.ID] = &TreeNode{
 			ID: d.ID, Parentid: d.Parentid,
-			Leader:   d.Leader,
-			Name:     d.Name,
-			Level:    d.Level,
-			Children: []*TreeNode{}}
+			Leader:    d.Leader,
+			Name:      d.Name,
+			Level:     d.Level,
+			Attribute: d.Attribute,
+			Children:  []*TreeNode{}}
 	}
 	for {
 		// 父节点id

@@ -175,7 +175,7 @@ func GetUserinfo(c *model.Container) error {
 // FindAllDepartment 查询部门树形结构
 func FindAllDepartment(c *model.Container) error {
 	if c.Body.Refresh || Conmgr.cacheMap[departmentInfo] == nil {
-		d, err := model.FindAllWxDepartment()
+		d, err := model.FindAllWeixinLeaveDepartment()
 		if err != nil {
 			return err
 		}
@@ -217,12 +217,12 @@ func GetUserinfoFromCacheByWxUserid(userid string) (*model.Userinfo, error) {
 }
 
 // cacheDepartment 缓存部门信息
-func cacheDepartment(dept *model.WxDepartment) {
+func cacheDepartment(dept *model.WeixinLeaveDepartment) {
 	Conmgr.cacheMap[fmt.Sprintf("%s%d", departmentInfo, dept.ID)] = dept
 }
 
 // GetDepartmentFromCache 从缓存获取
-func GetDepartmentFromCache(departmentID int) (*model.WxDepartment, error) {
+func GetDepartmentFromCache(departmentID int) (*model.WeixinLeaveDepartment, error) {
 	dept := Conmgr.cacheMap[fmt.Sprintf("%s%d", departmentInfo, departmentID)]
 	if dept == nil {
 		departments, err := model.FindAllDepartment("id=?", departmentID)
@@ -234,8 +234,8 @@ func GetDepartmentFromCache(departmentID int) (*model.WxDepartment, error) {
 		}
 	}
 	if dept != nil {
-		cacheDepartment(dept.(*model.WxDepartment))
-		return dept.(*model.WxDepartment), nil
+		cacheDepartment(dept.(*model.WeixinLeaveDepartment))
+		return dept.(*model.WeixinLeaveDepartment), nil
 	}
 	return nil, nil
 }

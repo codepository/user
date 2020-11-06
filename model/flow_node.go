@@ -578,14 +578,12 @@ func (e *ExecutionData) withdraw(perform int, userid string, speech string) erro
 func (e *ExecutionData) Perform(perform int, userid string, speech string) error {
 	switch perform {
 	case 2:
-		log.Println("通过")
 		err := e.complete(perform, userid, speech)
 		if err != nil {
 			return err
 		}
 		break
 	case 3:
-		log.Println("驳回")
 		err := e.complete(perform, userid, speech)
 		if err != nil {
 			return err

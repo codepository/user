@@ -24,7 +24,6 @@ func (u *WeixinOauserTaguser) FromMap(fields map[string]interface{}) error {
 	if fields["uId"] == nil || fields["tagId"] == nil {
 		return errors.New("uId、tagId不能为空")
 	}
-
 	userid, ok := fields["uId"].(float64)
 	if !ok {
 		return errors.New("uId 必须为整数")
@@ -33,6 +32,7 @@ func (u *WeixinOauserTaguser) FromMap(fields map[string]interface{}) error {
 	if !ok {
 		return errors.New("tagId 必须为整数")
 	}
+
 	u.UserID = int(userid)
 	u.TagID = int(labelid)
 	return nil
