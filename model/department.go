@@ -39,8 +39,8 @@ type TreeNode struct {
 // FindAllDepartment 查询所有部门
 func FindAllDepartment(query interface{}, values ...interface{}) ([]*WeixinLeaveDepartment, error) {
 	var result []*WeixinLeaveDepartment
-	err := wxdb.Table(WeixinLeaveDepartmentTableName+" d").Select("d.*").
-		Where("d.st=1").Where(query, values...).
+	err := wxdb.Table(WeixinLeaveDepartmentTableName).Select("*").
+		Where("st=1").Where(query, values...).
 		Find(&result).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err

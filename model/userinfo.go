@@ -11,7 +11,7 @@ import (
 type Userinfo struct {
 	ID int `json:"id,omitempty"`
 	// 对应微信id
-	Userid         string `json:"userid"`
+	Userid         string `json:"userid,omitempty"`
 	Name           string `json:"name,omitempty"`
 	DepartmentID   int    `gorm:"column:departmentid" json:"departmentid,omitempty"`
 	Departmentname string `json:"departmentname,omitempty"`
@@ -109,9 +109,15 @@ func FindAllUserinfoByRawSQL(rawSQL string, values ...interface{}) ([]*Userinfo,
 }
 
 // FindAllUserInfo 查询所有用户
-func FindAllUserInfo(query interface{}, values ...interface{}) ([]*Userinfo, error) {
+func FindAllUserInfo(fields string, query interface{}, values ...interface{}) ([]*Userinfo, error) {
 	var users []*Userinfo
-	err := wxdb.Table(UserinfoTabel).Where(query, values...).Find(&users).Error
+	if len(fields) == 0 {
+		fields = "*"
+	}
+	err := wxdb.Table(UserinfoTabel).Select(fields).Where(query, values...).Find(&users).Error
+	if err != nil && err == gorm.ErrRecordNotFound {
+		return make([]*Userinfo, 0), nil
+	}
 	return users, err
 }
 

@@ -192,6 +192,21 @@ func FindAllDepartment(c *model.Container) error {
 	return nil
 }
 
+// FindDepartment 查询部门
+func FindDepartment(c *model.Container) error {
+	// 参数检查，不能全为空
+	if len(c.Body.Params) == 0 {
+		return fmt.Errorf(`参数格式{"body":"params":{"id":2,"name":"运营中心","attribute":1}}`)
+	}
+	datas, err := model.FindAllDepartment(c.Body.Params)
+	if err != nil {
+		return fmt.Errorf("查询部门报错:%s", err.Error())
+	}
+	c.Body.Data = append(c.Body.Data, datas)
+	return nil
+
+}
+
 // cacheUserinfoByWxUserid 根据用户微信帐号缓存用户信息
 func cacheUserinfoByWxUserid(userinfo *model.Userinfo) {
 	Conmgr.cacheMap[fmt.Sprintf("%s%s", userinfoCache, userinfo.Userid)] = userinfo

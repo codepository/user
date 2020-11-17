@@ -125,7 +125,7 @@ func UpdatePassword(userid int, password string) error {
 
 // FindAllUserInfo 查询用户信息
 func FindAllUserInfo(query interface{}) ([]*model.Userinfo, error) {
-	return model.FindAllUserInfo(query)
+	return model.FindAllUserInfo("", query)
 }
 
 // GetUseridsByTagAndLevel GetUseridsByTagAndLevel

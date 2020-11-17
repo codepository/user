@@ -160,3 +160,17 @@ func HasPermission(token, url string) (bool, error) {
 	}
 	return flag, nil
 }
+
+// FindAllUsers 查询所有用户
+func FindAllUsers(c *model.Container) error {
+	errstr := `参数格式:{"body":{"metrics":"id,name","params":{"userid":"","name":"","departmentid":"","departmentname":"","mobile":"","email":"",}}}metrics为显示的字段`
+	if len(c.Body.Params) == 0 {
+		return fmt.Errorf(errstr)
+	}
+	datas, err := model.FindAllUserInfo(c.Body.Metrics, c.Body.Params)
+	if err != nil {
+		return fmt.Errorf("查询用户:%s", err.Error())
+	}
+	c.Body.Data = append(c.Body.Data, datas)
+	return nil
+}

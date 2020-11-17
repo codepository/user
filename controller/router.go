@@ -50,6 +50,7 @@ func SetRouters() {
 		{route: "visit/user/findbylabelids", handler: service.FindUsersByLabelIDs},
 		//查询用户 {"body":{"username":"张三","paged":false,"method":"visit/user/getUsers"}}
 		{route: "visit/user/getUsers", handler: service.GetUsers},
+		{route: "visit/user/findAll", handler: conmgr.FindAllUsers},
 		{route: "exec/user/forgetPass", handler: conmgr.ForgetPass},
 		{route: "exec/user/alterPass", handler: conmgr.AlterPass},
 		// 根据标签和职级查询用户id,level是职级
@@ -96,8 +97,10 @@ func SetRouters() {
 		// 任务 查询任务对应的角色组
 		{route: "visit/task/taskRoles", handler: conmgr.FindTaskRoles},
 		// ====================== 部门 ==========================
-		// 查询部门：{"body":{"refresh":false,"paged":true,"method":"visit/department/all"}}
+		// 查询所有部门，以树形结构展示：{"body":{"refresh":false,"paged":true,"method":"visit/department/all"}}
 		{route: "visit/department/all", handler: conmgr.FindAllDepartment},
+		// 按条件查询部门，分行显示
+		{route: "visit/department/find", handler: conmgr.FindDepartment},
 		// 同步weixin_leave_leaderrole中分管领导信息，从weixin_leave_userinfo同步部门领导信息
 		{route: "exec/department/sync", handler: conmgr.SyncLeader},
 		// 更新部门信息

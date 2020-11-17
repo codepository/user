@@ -124,7 +124,7 @@ func syncDepartmentLeader() error {
 		return err
 	}
 	// 查出所有的领导
-	leaders, err := model.FindAllUserInfo("is_leader=1 and status=1")
+	leaders, err := model.FindAllUserInfo("", "is_leader=1 and status=1")
 	if err != nil {
 		return err
 	}

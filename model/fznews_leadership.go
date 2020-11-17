@@ -62,7 +62,7 @@ func FindFznewsLeadership(query interface{}, values ...interface{}) ([]*FznewsLe
 			userid = append(userid, u.UserID)
 		}
 		// 查询用户信息
-		users, err := FindAllUserInfo(userid)
+		users, err := FindAllUserInfo("*", userid)
 		if err != nil {
 			return nil, err
 		}
