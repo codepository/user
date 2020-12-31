@@ -10,6 +10,37 @@ import (
 	"github.com/mumushuiding/util"
 )
 
+// FindLabel 根据条件从weixin_oauser_tag查询数据
+func FindLabel(c *model.Container) error {
+	errstr := `参数格式:{"body":{"params":{"field":"id,tagName,type,describe","type":"标签类型","tagName":"标签名","tagNameLike":"根据标签名模糊查询"}}}`
+	if len(c.Body.Params) == 0 {
+		return fmt.Errorf(errstr)
+	}
+	var sqlbuff strings.Builder
+	if c.Body.Params["tagNameLike"] != nil {
+		sqlbuff.WriteString(fmt.Sprintf("and tagName like '%s' ", "%"+c.Body.Params["tagNameLike"].(string)+"%"))
+	}
+	if c.Body.Params["tagName"] != nil {
+		sqlbuff.WriteString(fmt.Sprintf("and tagName='%s' ", c.Body.Params["tagName"].(string)))
+	}
+	if c.Body.Params["type"] != nil {
+		sqlbuff.WriteString(fmt.Sprintf("and type='%s' ", c.Body.Params["type"].(string)))
+	}
+	if sqlbuff.Len() == 0 {
+		return fmt.Errorf(errstr)
+	}
+	field := ""
+	if c.Body.Params["field"] != nil {
+		field = c.Body.Params["field"].(string)
+	}
+	datas, err := model.FindAllTags(field, sqlbuff.String()[4:])
+	if err != nil {
+		return fmt.Errorf("查询用户标签:%s", err.Error())
+	}
+	c.Body.Data = append(c.Body.Data, datas)
+	return nil
+}
+
 // FindUserLabel 查询用户标签
 func FindUserLabel(c *model.Container) error {
 	errstr := `参数格式:{"body":{"params":{"userid":3,"labeltype":"考核组"}} labeltype是用户标签类别`
@@ -31,7 +62,7 @@ func FindUserLabel(c *model.Container) error {
 	if querybuffer.Len() == 0 {
 		return errors.New(errstr)
 	}
-	datas, err := model.FindAllTags(querybuffer.String()[5:])
+	datas, err := model.FindAllTags("", querybuffer.String()[5:])
 	if err != nil {
 		return fmt.Errorf("查询标签错误:%s", err.Error())
 	}

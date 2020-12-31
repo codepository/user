@@ -121,6 +121,24 @@ func FindAllUserInfo(fields string, query interface{}, values ...interface{}) ([
 	return users, err
 }
 
+// FindAllUserInfoLimit 查询所有用户
+func FindAllUserInfoLimit(fields string, query interface{}, limit, offset int) ([]*Userinfo, error) {
+	var users []*Userinfo
+	if len(fields) == 0 {
+		fields = "*"
+	}
+	if limit == 0 {
+		limit = 20
+	}
+	err := wxdb.Table(UserinfoTabel).Select(fields).Where(query).
+		Limit(limit).Offset(offset).
+		Find(&users).Error
+	if err != nil && err == gorm.ErrRecordNotFound {
+		return make([]*Userinfo, 0), nil
+	}
+	return users, err
+}
+
 // FindAllUseridsByDepartmentids 根据部门id查询所有用户id
 func FindAllUseridsByDepartmentids(departmentids []interface{}) ([]int, error) {
 	var ids []int
@@ -141,49 +159,12 @@ func FindSecondLeaderByDepartmentid(departmentid int) ([]*Userinfo, error) {
 	return result, nil
 }
 
-// FindLeaderByDepartmentID 若isLeader是0,用户上级为部门领导;若isLeader是1上级为分管部门的领导
-// 根据用户部门找出分管该部门的users
-// 若isLeader=0,则从users筛选出包含"部门领导"标签的用户，否则筛选出包含"分管领导"标签的用户
-// func FindLeaderByDepartmentID(departmentID int, isLeader float64) ([]*Userinfo, error) {
-// 	var result []*Userinfo
-// 	var err error
-// 	var yes bool
-// 	// 查询管理该部门的用户
-// 	err = wxdb.Raw("select * from weixin_leave_userinfo u join fznews_leadership l on l.user_id=u.id and l.department_id=?", departmentID).Scan(&result).Error
-// 	if err != nil && err != gorm.ErrRecordNotFound {
-// 		return nil, err
-// 	}
-// 	if len(result) == 0 {
-// 		return nil, fmt.Errorf("部门[%d]未设置分管领导,联系管理员", departmentID)
-// 	}
-// 	// 查询用户是否拥有"部门领导"或者"分管领导"标签
-// 	var users []*Userinfo
-// 	var ustr []string
-// 	for _, u := range result {
-// 		ustr = append(ustr, u.Name)
-// 		if isLeader == 0 {
-// 			// 找部门领导，取
-// 			yes, err = IsUserHasLabel(u.ID, DepartmentLeader)
-// 			// log.Printf("用户:%s,包含标签:%s\n,是真的:%v", u.Name, DepartmentLeader, yes)
-// 		} else {
-// 			yes, err = IsUserHasLabel(u.ID, LeadersInCharge)
-// 			// log.Printf("用户:%s,包含标签:%s\n,是真的:%v", u.Name, LeadersInCharge, yes)
-// 		}
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		if yes {
-// 			users = append(users, u)
-// 		}
-// 	}
-// 	if len(users) == 0 {
-// 		if isLeader == 0 {
-// 			return nil, fmt.Errorf("用户%v若是部门领导则需要设置【部门领导】标签", ustr)
-// 		}
-// 		return nil, fmt.Errorf("用户%v若是分管领导则需要设置【分管领导】标签", ustr)
-// 	}
-// 	return users, nil
-// }
+// FindSingleUserByUserid 根据id查询用户
+func FindSingleUserByUserid(id int) (*Userinfo, error) {
+	var user *Userinfo
+	err := wxdb.Table(UserinfoTabel).Where(id).Find(&user).Error
+	return user, err
+}
 
 // FindLeaderByUserID 若isLeader是0,用户上级为部门领导;若isLeader是1上级为分管部门的领导
 // 根据用户部门找出分管该部门的users

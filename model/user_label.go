@@ -117,7 +117,7 @@ func IsUserHasLabel(userID int, tagName string) (bool, error) {
 // AddUserLabelByLabelName 根据标签名为用户添加标签
 func AddUserLabelByLabelName(userID int, tagName string) error {
 	var tu WeixinOauserTaguser
-	tags, err := FindAllTags("tagName=?", tagName)
+	tags, err := FindAllTags("", fmt.Sprintf("tagName='%s'", tagName))
 	if err != nil {
 		return fmt.Errorf("查询标签【%s】失败:%s", tagName, err.Error())
 	}
@@ -128,4 +128,12 @@ func AddUserLabelByLabelName(userID int, tagName string) error {
 	tu.TagName = tags[0].TagName
 	tu.UserID = userID
 	return tu.SaveOrUpdate()
+}
+
+// CountUserByTagID 查询标签对应用户人数
+func CountUserByTagID(id int) (int, error) {
+	var count int
+	err := wxdb.Table(UserLabelTable).Where("tagId=?", id).Count(&count).Error
+	return count, err
+
 }

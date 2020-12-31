@@ -20,8 +20,8 @@ var LeadersInCharge = "分管领导"
 // WeixinOauserTag 标签
 type WeixinOauserTag struct {
 	ID       int    `gorm:"primary_key" json:"id,omitempty"`
-	TagName  string `gorm:"column:tagName" json:"tagName"`
-	Type     string `json:"type"`
+	TagName  string `gorm:"column:tagName" json:"tagName,omitempty"`
+	Type     string `json:"type,omitempty"`
 	Describe string `json:"describe,omitempty"`
 }
 
@@ -63,9 +63,12 @@ func GetLabels() ([]*WeixinOauserTag, error) {
 }
 
 // FindAllTags 查询所有标签
-func FindAllTags(query interface{}, values ...interface{}) ([]*WeixinOauserTag, error) {
+func FindAllTags(fields string, query interface{}) ([]*WeixinOauserTag, error) {
+	if len(fields) == 0 {
+		fields = "*"
+	}
 	var datas []*WeixinOauserTag
-	err := wxdb.Where(query, values...).Find(&datas).Error
+	err := wxdb.Select(fields).Where(query).Find(&datas).Error
 	return datas, err
 }
 

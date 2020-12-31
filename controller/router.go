@@ -61,6 +61,8 @@ func SetRouters() {
 		{route: "exec/label/add", handler: conmgr.AddNewLabel, meta: &RouteMeta{authority: []string{SysManagerAuthority}}},
 		// 查询用户标签
 		{route: "visit/label/findall", handler: conmgr.FindUserLabel},
+		// 根据条件查询标签
+		{route: "visit/lable/find", handler: conmgr.FindLabel},
 		// 启动流程
 		{route: "exec/flow/startByToken", handler: conmgr.StartFlowByToken, meta: &RouteMeta{
 			authority: []string{"%考核组成员"},
@@ -94,6 +96,14 @@ func SetRouters() {
 		{route: "visit/task/completeRate", handler: conmgr.TaskCompleteRate},
 		{route: "visit/task/uncomplete", handler: conmgr.TaskUncomplete},
 		{route: "exec/task/complete", handler: conmgr.CompleteTask},
+		// 任务人数，提交情况，审结情况
+		{route: "visist/task/completedescribe", handler: conmgr.CompleteDescribe},
+		// {"body":"params":{"apply":1,"titleLike":"11月份-月度考核"}} 1表示已经提交一线考核的员工，0表示未提交的员工
+		{route: "visit/task/personApplyYxkh", handler: conmgr.PersonApplyYxkh},
+		// {"body":"params":{"finish":1,"titleLike":"11月份-月度考核"}} 0表示已经审批结束的一线考核的员工，1表示未审批结束的一线考核员工
+		{route: "visit/task/personFinishYxkh", handler: conmgr.PersonFinishYxkh},
+		// {"body":"params":{"businessType":"月度考核","titleLike":"11月份-月度考核"}}；
+		{route: "visit/task/userTaskRank", handler: conmgr.UserTaskRank},
 		// 任务 查询任务对应的角色组
 		{route: "visit/task/taskRoles", handler: conmgr.FindTaskRoles},
 		// ====================== 部门 ==========================
@@ -105,6 +115,11 @@ func SetRouters() {
 		{route: "exec/department/sync", handler: conmgr.SyncLeader},
 		// 更新部门信息
 		{route: "exec/department/update", handler: conmgr.UpdateDepartment},
+		// ====================== 文件存储 ==============================
+		// 从数据库查询文件名
+		{route: "visit/uploadfile/find", handler: conmgr.FindUploadfile},
+		// 删除上传的文件
+		{route: "exec/uploadfile/delbyid", handler: conmgr.DelUploadfileByID},
 	}
 }
 

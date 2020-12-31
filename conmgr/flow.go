@@ -180,7 +180,7 @@ func FindFlowMyProcess(c *model.Container) error {
 		sqlbuffer.WriteString(fmt.Sprintf(" and completed=%d", c))
 	}
 	c.Body.Paged = true
-	datas, total, err := model.FindAllFlowProcessPaged(c.Body.MaxResults, c.Body.StartIndex, sqlbuffer.String())
+	datas, total, err := model.FindAllFlowProcessPaged(c.Body.MaxResults, c.Body.StartIndex, "", sqlbuffer.String())
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func FindFlowTask(c *model.Container) error {
 		sqlbuffer.WriteString(" and deptName in (" + deptBuffer.String()[1:] + ")")
 	}
 	c.Body.Paged = true
-	datas, total, err := model.FindAllFlowProcessPaged(c.Body.MaxResults, c.Body.StartIndex, sqlbuffer.String())
+	datas, total, err := model.FindAllFlowProcessPaged(c.Body.MaxResults, c.Body.StartIndex, "", sqlbuffer.String())
 	if err != nil {
 		return err
 	}
@@ -365,7 +365,7 @@ func CompleteFlowTask(c *model.Container) error {
 }
 
 func updateProcessByID(executionData *model.ExecutionData) (*model.FznewsFlowProcess, error) {
-	procs, err := model.FindAllFlowProcess("processInstanceId=?", executionData.ThirdNo)
+	procs, err := model.FindAllFlowProcess("", fmt.Sprintf("processInstanceId='%s'", executionData.ThirdNo))
 	if err != nil {
 		return nil, err
 	}
@@ -414,15 +414,15 @@ func FlowStepper(c *model.Container) error {
 // FindAllFlow 查询所有流程
 func FindAllFlow(c *model.Container) error {
 
-	errstr := `参数格式: {"body":{"params":{"processInstanceId":"xxxxx","userId":"wanyu","uid":33,"titleLike":"","title":"sss", 
-	"businessType":"dxxx","deptName":"","candidate":"linting","username":"张三","completed":0,"posts":[0,1]}}}
-	userId 流程申请人对应的微信号, uid 申请人的ID, title 流程名,titleLike 流程名近似查询, businessType 流程类型
-	deptName 部门名称, candidate 审批人对应微信号, username 申请人姓名, posts对应申请人的职级：0是一般工作人员， 
-	1中层正职（含主持工作的副职）, 2是中层副职，3是社领导
-	`
-	if len(c.Body.Params) == 0 {
-		return fmt.Errorf(errstr)
-	}
+	// errstr := `参数格式: {"body":{"params":{"processInstanceId":"xxxxx","userId":"wanyu","uid":33,"titleLike":"","title":"sss",
+	// "businessType":"dxxx","deptName":"","candidate":"linting","username":"张三","completed":0,"posts":[0,1]}}}
+	// userId 流程申请人对应的微信号, uid 申请人的ID, title 流程名,titleLike 流程名近似查询, businessType 流程类型
+	// deptName 部门名称, candidate 审批人对应微信号, username 申请人姓名, posts对应申请人的职级：0是一般工作人员，
+	// 1中层正职（含主持工作的副职）, 2是中层副职，3是社领导
+	// `
+	// if len(c.Body.Params) == 0 {
+	// 	return fmt.Errorf(errstr)
+	// }
 	var buff strings.Builder
 	if !util.InterfaceIsEmpty(c.Body.Params["processInstanceId"]) {
 		buff.WriteString(fmt.Sprintf(" and processInstanceId='%v'", c.Body.Params["processInstanceId"]))
@@ -488,15 +488,23 @@ func FindAllFlow(c *model.Container) error {
 			buff.WriteString(fmt.Sprintf(" and uid in (select  id from %s where level in (%s))", model.UserinfoTabel, lbuff.String()[1:]))
 		}
 	}
-	// log.Println("sql:", buff.String()[4:])
-	if buff.Len() == 0 {
-		return fmt.Errorf("查询参数不能全为空")
+	var fields string
+	if c.Body.Params["fields"] != nil {
+		fields = c.Body.Params["fields"].(string)
 	}
-	datas, err := model.FindAllFlowProcess(buff.String()[4:])
-	if err != nil {
-		return err
+	if buff.Len() != 0 {
+		datas, _, err := model.FindAllFlowProcessPaged(0, 0, fields, buff.String()[4:])
+		if err != nil {
+			return err
+		}
+		c.Body.Data = append(c.Body.Data, datas)
+	} else {
+		datas, _, err := model.FindAllFlowProcessPaged(0, 0, fields, map[string]interface{}{})
+		if err != nil {
+			return err
+		}
+		c.Body.Data = append(c.Body.Data, datas)
 	}
-	c.Body.Data = append(c.Body.Data, datas)
 	return nil
 
 }

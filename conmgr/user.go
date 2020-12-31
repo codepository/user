@@ -163,14 +163,22 @@ func HasPermission(token, url string) (bool, error) {
 
 // FindAllUsers 查询所有用户
 func FindAllUsers(c *model.Container) error {
-	errstr := `参数格式:{"body":{"metrics":"id,name","params":{"userid":"","name":"","departmentid":"","departmentname":"","mobile":"","email":"",}}}metrics为显示的字段`
+	errstr := `参数格式:{"body":{"metrics":"id,name","params":{"where":"id=1 and name='xx'","userid":"","name":"","departmentid":"","departmentname":"","mobile":"","email":"",}}}metrics为显示的字段,where不为空时忽略其它查询条件`
 	if len(c.Body.Params) == 0 {
 		return fmt.Errorf(errstr)
 	}
-	datas, err := model.FindAllUserInfo(c.Body.Metrics, c.Body.Params)
-	if err != nil {
-		return fmt.Errorf("查询用户:%s", err.Error())
+	if c.Body.Params["where"] != nil {
+		datas, err := model.FindAllUserInfo(c.Body.Metrics, c.Body.Params["where"].(string))
+		if err != nil {
+			return fmt.Errorf("查询用户:%s", err.Error())
+		}
+		c.Body.Data = append(c.Body.Data, datas)
+	} else {
+		datas, err := model.FindAllUserInfo(c.Body.Metrics, c.Body.Params)
+		if err != nil {
+			return fmt.Errorf("查询用户:%s", err.Error())
+		}
+		c.Body.Data = append(c.Body.Data, datas)
 	}
-	c.Body.Data = append(c.Body.Data, datas)
 	return nil
 }

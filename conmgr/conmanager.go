@@ -216,7 +216,7 @@ func cacheUserinfoByWxUserid(userinfo *model.Userinfo) {
 func GetUserinfoFromCacheByWxUserid(userid string) (*model.Userinfo, error) {
 	userinfo := Conmgr.cacheMap[fmt.Sprintf("%s%s", userinfoCache, userid)]
 	if userinfo == nil {
-		users, err := model.FindAllUserInfo("userid=?", userid)
+		users, err := model.FindAllUserInfo("", "userid=?", userid)
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, err
 		}

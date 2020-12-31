@@ -130,7 +130,7 @@ func FindAllUserInfo(query interface{}) ([]*model.Userinfo, error) {
 
 // GetUseridsByTagAndLevel GetUseridsByTagAndLevel
 func GetUseridsByTagAndLevel(c *model.Container) error {
-	errstr := `参数格式:{"body":{"data":[{"tags":["第一考核组成员","项目舞台"],"levels":[0,1],"methods":["and","or"]}]}}, and表示同时拥有"第一考核组成员","项目舞台"标签的用户`
+	errstr := `参数格式:{"body":{"params":{"tags":["第一考核组成员","项目舞台"],"levels":[0,1],"methods":["and","or"]}]}, and表示同时拥有"第一考核组成员","项目舞台"标签的用户`
 	var err error
 	// 参数解析
 	if len(c.Body.Params) == 0 {
@@ -154,12 +154,12 @@ func GetUseridsByTagAndLevel(c *model.Container) error {
 	// 标签判断
 	tags, ok := par["tags"].([]interface{})
 	if !ok {
-		return errors.New(errstr)
+		return fmt.Errorf("tags必须为数组")
 	}
 	// 根据标签名称获取标签集合
 	tagids, err := FindTagidsByTagName(tags)
 	if err != nil {
-		return err
+		return fmt.Errorf("根据标签【%v】查询标签id:%s", tags, err.Error())
 	}
 	fields := "id"
 	c.Body.Data = c.Body.Data[:0]

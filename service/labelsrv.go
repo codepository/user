@@ -45,7 +45,14 @@ func AddNewLabel(c *model.Container) error {
 
 // FindTagidsByTagName 根据标签名称返回标称id
 func FindTagidsByTagName(tagnames []interface{}) ([]int, error) {
-	tags, err := model.FindAllTags("tagName in (?)", tagnames)
+	if len(tagnames) == 0 {
+		return make([]int, 0), fmt.Errorf("根据tagName查询tagid:tagnames数组不能为空")
+	}
+	var tagstr string
+	for _, t := range tagnames {
+		tagstr += fmt.Sprintf(",'%s'", t.(string))
+	}
+	tags, err := model.FindAllTags("", fmt.Sprintf("tagName in (%s)", tagstr[1:]))
 	if err != nil {
 		return nil, err
 	}

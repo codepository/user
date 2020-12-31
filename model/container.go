@@ -1,6 +1,7 @@
 package model
 
 import (
+	"os"
 	"strings"
 
 	"github.com/mumushuiding/util"
@@ -10,6 +11,7 @@ import (
 type Container struct {
 	Header CHeader `json:"header,omitemtpy"`
 	Body   CBody   `json:"body,omitempty"`
+	File   *os.File
 }
 
 // CHeader CHeader
